@@ -135,6 +135,9 @@ msgstr ""
 msgid "Back to SMTP Relay settings"
 msgstr ""
 
+msgid "SMTP Relay settings"
+msgstr ""
+
 msgid "SMTP Relay: test connection"
 msgstr ""
 

@@ -137,6 +137,9 @@ msgstr "De relay weigert; controleer de instellingen en de inrichting van de rel
 msgid "Back to SMTP Relay settings"
 msgstr "Terug naar de instellingen van SMTP Relay"
 
+msgid "SMTP Relay settings"
+msgstr "Instellingen SMTP Relay"
+
 msgid "SMTP Relay: test connection"
 msgstr "SMTP Relay: verbinding testen"
 

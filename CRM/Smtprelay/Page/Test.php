@@ -19,7 +19,11 @@ class CRM_Smtprelay_Page_Test extends CRM_Core_Page {
     $this->assign('from', $fromEmail);
     $this->assign('to', $to);
     // 'mode' is set by CRM_Core_Page::run() itself and would overwrite ours (showed "null").
-    $this->assign('relayMode', CRM_Smtprelay_Decision::mode());
+    // Show the translated label of the mode ("Off", Dutch "Uit"), not the stored key.
+    $mode    = CRM_Smtprelay_Decision::mode();
+    $options = \Civi\Core\SettingsMetadata::getMetadata(['name' => ['smtprelay_mode']], NULL, TRUE)['smtprelay_mode']['options'] ?? [];
+    $label   = (string) ($options[$mode] ?? $mode);
+    $this->assign('relayMode', trim(explode(' - ', $label, 2)[0]));
     $this->assign('settingsUrl', CRM_Utils_System::url('civicrm/admin/setting/smtprelay', 'reset=1'));
     parent::run();
   }

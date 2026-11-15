@@ -22,6 +22,8 @@ function smtprelay_civicrm_config(\CRM_Core_Config $config): void {
   if (!$registered) {
     $registered = TRUE;
     \Civi::dispatcher()->addListener('hook_civicrm_alterMailer', 'smtprelay_alter_mailer', -1000);
+    // Before the setting-admin mixin (-1000) adds its menu item: add ours with a translatable label.
+    \Civi::dispatcher()->addListener('hook_civicrm_navigationMenu', 'smtprelay_navigation_label', -100);
   }
 }
 
@@ -52,4 +54,58 @@ function smtprelay_civicrm_install(): void {
  */
 function smtprelay_civicrm_enable(): void {
   _smtprelay_civix_civicrm_enable();
+}
+
+/**
+ * Implements hook_civicrm_buildForm().
+ *
+ * The setting-admin mixin titles the page with ts('%1 Settings'), which core does not translate
+ * (and the title is stored when the menu is rebuilt, in whatever language that process ran). Set a
+ * translatable title at display time instead.
+ */
+function smtprelay_civicrm_buildForm($formName, &$form): void {
+  if ($formName === 'CRM_Admin_Form_Generic' && CRM_Utils_System::currentPath() === 'civicrm/admin/setting/smtprelay') {
+    $form->setTitle(E::ts('SMTP Relay settings'));
+  }
+}
+
+/**
+ * Listener on hook_civicrm_navigationMenu: add the Administer > System Settings link ourselves, with a
+ * translatable label. The setting-admin mixin adds the same link at priority -1000 with the
+ * untranslated title "%1 Settings", but skips it when an item for this path already exists; this
+ * listener runs earlier (-100), so ours wins.
+ */
+function smtprelay_navigation_label(\Civi\Core\Event\GenericHookEvent $e): void {
+  $path  = 'civicrm/admin/setting/smtprelay';
+  $found = FALSE;
+  $walk  = function (array &$items, callable $visit) use (&$walk): void {
+    foreach ($items as &$item) {
+      $visit($item);
+      if (!empty($item['child'])) {
+        $walk($item['child'], $visit);
+      }
+    }
+  };
+  $walk($e->params, function (&$item) use ($path, &$found) {
+    if (strpos((string) ($item['attributes']['url'] ?? ''), $path) === 0) {
+      $item['attributes']['label'] = E::ts('SMTP Relay settings');
+      $found = TRUE;
+    }
+  });
+  if ($found) {
+    return;
+  }
+  $walk($e->params, function (&$item) use ($path, &$found) {
+    if (!$found && ($item['attributes']['name'] ?? '') === 'System Settings') {
+      $item['child'][] = ['attributes' => [
+        'label'               => E::ts('SMTP Relay settings'),
+        'name'                => 'smtprelay_setting_admin',
+        'url'                 => $path . '?reset=1',
+        'permission'          => 'administer CiviCRM,administer smtprelay',
+        'permission_operator' => 'OR',
+        'active'              => 1,
+      ]];
+      $found = TRUE;
+    }
+  });
 }
