@@ -1,0 +1,142 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: nl.onvergetelijk.smtprelay\n"
+"POT-Creation-Date: 2026-11-15\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Off - nothing is routed, the relay is not even hooked in"
+msgstr "Uit - er wordt niets omgeleid, de relay wordt niet eens ingehaakt"
+
+msgid "Shadow - decide and log what would go via the relay, but send everything the normal way"
+msgstr "Schaduw - besluiten en loggen wat via de relay zou gaan, maar alles via de gewone route versturen"
+
+msgid "On - matching mailings are sent via the relay"
+msgstr "Aan - mailings die aan een regel voldoen gaan via de relay"
+
+msgid "Mode"
+msgstr "Stand"
+
+msgid "Start with Shadow during a real mailing and check the log (channel smtprelay) before switching to On. Test the relay without sending anything at civicrm/admin/setting/smtprelay/test."
+msgstr "Begin met Schaduw tijdens een echte mailing en controleer het log (kanaal smtprelay) voordat je op Aan zet. Test de relay zonder iets te versturen op civicrm/admin/setting/smtprelay/test."
+
+msgid "Rule: CiviMail mailings with at least this many recipients"
+msgstr "Regel: CiviMail-mailings met minstens zoveel ontvangers"
+
+msgid "A non-test CiviMail mailing with at least this many recipients goes via the relay. 0 switches this rule off. Test mailings, scheduled reminders, CiviRules and other single mails never match: only CiviMail bulk mail (VERP header X-CiviMail-Bounce plus Precedence: bulk) can be routed."
+msgstr "Een CiviMail-mailing (geen test) met minstens zoveel ontvangers gaat via de relay. 0 zet deze regel uit. Testmailings, geplande herinneringen, CiviRules en andere losse mail vallen er nooit onder: alleen CiviMail-bulkmail (VERP-kop X-CiviMail-Bounce plus Precedence: bulk) kan worden omgeleid."
+
+msgid "Rule: always these mailing IDs"
+msgstr "Regel: altijd deze mailing-ID's"
+
+msgid "Comma-separated CiviMail mailing IDs that always go via the relay, whatever their size (for example a single large campaign). Leave empty to use only the size rule."
+msgstr "CiviMail-mailing-ID's, gescheiden door komma's, die altijd via de relay gaan, hoe groot ze ook zijn (bijvoorbeeld één grote campagne). Laat leeg om alleen de regel op omvang te gebruiken."
+
+msgid "Relay host"
+msgstr "Relayserver"
+
+msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. Empty = relay not configured: matching mailings are refused (or fall back, see On failure)."
+msgstr "Bijvoorbeeld smtp-relay.gmail.com (SMTP-relayservice van Google Workspace) of de SMTP-server van een bulkmaildienst. Leeg = geen relay ingesteld: mailings die aan een regel voldoen worden geweigerd (of vallen terug, zie Bij een fout)."
+
+msgid "Relay port"
+msgstr "Poort"
+
+msgid "STARTTLS (usually port 587)"
+msgstr "STARTTLS (meestal poort 587)"
+
+msgid "Implicit TLS (usually port 465)"
+msgstr "Direct TLS (meestal poort 465)"
+
+msgid "None (local testing only)"
+msgstr "Geen (alleen voor lokaal testen)"
+
+msgid "Encryption"
+msgstr "Versleuteling"
+
+msgid "EHLO name"
+msgstr "EHLO-naam"
+
+msgid "Name sent in EHLO. Empty = the domain of the sender address. Google rejects \"localhost\"."
+msgstr "Naam die bij EHLO wordt meegestuurd. Leeg = het domein van het afzenderadres. Google weigert \"localhost\"."
+
+msgid "None - the relay trusts the server IP address"
+msgstr "Geen - de relay vertrouwt het IP-adres van de server"
+
+msgid "Username and password"
+msgstr "Gebruikersnaam en wachtwoord"
+
+msgid "OAuth token of oauth_outgoing_mail (XOAUTH2)"
+msgstr "OAuth-token van oauth_outgoing_mail (XOAUTH2)"
+
+msgid "Authentication"
+msgstr "Inloggen"
+
+msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. Tested with the Google Workspace SMTP relay (smtp-relay.gmail.com accepts XOAUTH2 with the username set to the mailbox address)."
+msgstr "OAuth gebruikt het systeemtoken dat de extensie OAuth Outgoing Mail voor het afzenderadres bijhoudt; er wordt geen wachtwoord opgeslagen. Getest met de SMTP-relay van Google Workspace (smtp-relay.gmail.com accepteert XOAUTH2 met het mailboxadres als gebruikersnaam)."
+
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+msgid "Only for Authentication = Username and password. With OAuth the username comes from the token (the mailbox address)."
+msgstr "Alleen bij Inloggen = Gebruikersnaam en wachtwoord. Bij OAuth komt de gebruikersnaam uit het token (het mailboxadres)."
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "Only for Authentication = Username and password. Values encrypted with CiviCRM crypto.token are decrypted on use; plain values work too but are stored as entered."
+msgstr "Alleen bij Inloggen = Gebruikersnaam en wachtwoord. Een waarde die met CiviCRM crypto.token is versleuteld, wordt bij gebruik ontsleuteld; een gewone waarde werkt ook, maar wordt opgeslagen zoals ingevoerd."
+
+msgid "Envelope sender (bounces)"
+msgstr "Envelop-afzender (bounces)"
+
+msgid "Rewrites the envelope sender (Return-Path) of relayed mail. Empty = keep the CiviMail VERP address. Set it to a monitored mailbox (for example the one your bounce processing reads) if the VERP addresses of your domain have no mailbox. The X-CiviMail-Bounce header stays, so CiviCRM still recognises the bounce."
+msgstr "Vervangt de envelop-afzender (Return-Path) van mail via de relay. Leeg = het VERP-adres van CiviMail blijft staan. Vul een mailbox in die gelezen wordt (bijvoorbeeld die van de bounceverwerking) als de VERP-adressen van je domein geen mailbox hebben. De kop X-CiviMail-Bounce blijft staan, dus CiviCRM herkent de bounce nog steeds."
+
+msgid "Refuse - return the error; CiviMail retries in a later run"
+msgstr "Weigeren - de fout teruggeven; CiviMail probeert het in een volgende run opnieuw"
+
+msgid "Fall back - send that message via the normal route"
+msgstr "Terugvallen - dat bericht via de gewone route versturen"
+
+msgid "On failure of the relay"
+msgstr "Bij een fout van de relay"
+
+msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota."
+msgstr "Weigeren is het veiligst als de relay er is vanwege een dagquotum op de gewone route: terugvallen zou juist dat quotum opmaken."
+
+msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
+msgstr "Handdruk met de relay: verbinden, inloggen, MAIL FROM en RCPT TO, daarna RSET. Er wordt geen bericht verstuurd (DATA wordt nooit gegeven)."
+
+msgid "Sender"
+msgstr "Afzender"
+
+msgid "Recipient"
+msgstr "Ontvanger"
+
+msgid "Step"
+msgstr "Stap"
+
+msgid "Result"
+msgstr "Uitkomst"
+
+msgid "Server reply"
+msgstr "Antwoord van de server"
+
+msgid "failed"
+msgstr "mislukt"
+
+msgid "The relay accepts this sender and recipient."
+msgstr "De relay accepteert deze afzender en ontvanger."
+
+msgid "The relay refused; check the settings and the relay configuration."
+msgstr "De relay weigert; controleer de instellingen en de inrichting van de relay."
+
+msgid "Back to SMTP Relay settings"
+msgstr "Terug naar de instellingen van SMTP Relay"
+
+msgid "SMTP Relay: test connection"
+msgstr "SMTP Relay: verbinding testen"
+

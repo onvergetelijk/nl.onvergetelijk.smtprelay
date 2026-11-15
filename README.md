@@ -75,6 +75,12 @@ the username set to the display name instead of the mailbox address, Google answ
   address, SES or SparkPost) depends on hook order; test that combination.
 - Not (yet): routing on a daily counter of the normal route.
 
+## Translations
+
+Dutch (`nl_NL`) is included in `l10n/nl_NL/LC_MESSAGES/smtprelay.mo`; `l10n/smtprelay.pot` is the template for
+other languages. With `CIVICRM_GETTEXT_NATIVE` the operating system needs the locale (for Dutch:
+`nl_NL.UTF-8` in `/etc/locale.gen`, then `locale-gen`), otherwise every CiviCRM string stays English.
+
 ## Development
 
 Tests (end-to-end against a development site; nothing is sent, the mailers are fakes):

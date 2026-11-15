@@ -1,0 +1,140 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: nl.onvergetelijk.smtprelay\n"
+"POT-Creation-Date: 2026-11-15\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Off - nothing is routed, the relay is not even hooked in"
+msgstr ""
+
+msgid "Shadow - decide and log what would go via the relay, but send everything the normal way"
+msgstr ""
+
+msgid "On - matching mailings are sent via the relay"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Start with Shadow during a real mailing and check the log (channel smtprelay) before switching to On. Test the relay without sending anything at civicrm/admin/setting/smtprelay/test."
+msgstr ""
+
+msgid "Rule: CiviMail mailings with at least this many recipients"
+msgstr ""
+
+msgid "A non-test CiviMail mailing with at least this many recipients goes via the relay. 0 switches this rule off. Test mailings, scheduled reminders, CiviRules and other single mails never match: only CiviMail bulk mail (VERP header X-CiviMail-Bounce plus Precedence: bulk) can be routed."
+msgstr ""
+
+msgid "Rule: always these mailing IDs"
+msgstr ""
+
+msgid "Comma-separated CiviMail mailing IDs that always go via the relay, whatever their size (for example a single large campaign). Leave empty to use only the size rule."
+msgstr ""
+
+msgid "Relay host"
+msgstr ""
+
+msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. Empty = relay not configured: matching mailings are refused (or fall back, see On failure)."
+msgstr ""
+
+msgid "Relay port"
+msgstr ""
+
+msgid "STARTTLS (usually port 587)"
+msgstr ""
+
+msgid "Implicit TLS (usually port 465)"
+msgstr ""
+
+msgid "None (local testing only)"
+msgstr ""
+
+msgid "Encryption"
+msgstr ""
+
+msgid "EHLO name"
+msgstr ""
+
+msgid "Name sent in EHLO. Empty = the domain of the sender address. Google rejects \"localhost\"."
+msgstr ""
+
+msgid "None - the relay trusts the server IP address"
+msgstr ""
+
+msgid "Username and password"
+msgstr ""
+
+msgid "OAuth token of oauth_outgoing_mail (XOAUTH2)"
+msgstr ""
+
+msgid "Authentication"
+msgstr ""
+
+msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. Tested with the Google Workspace SMTP relay (smtp-relay.gmail.com accepts XOAUTH2 with the username set to the mailbox address)."
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Only for Authentication = Username and password. With OAuth the username comes from the token (the mailbox address)."
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Only for Authentication = Username and password. Values encrypted with CiviCRM crypto.token are decrypted on use; plain values work too but are stored as entered."
+msgstr ""
+
+msgid "Envelope sender (bounces)"
+msgstr ""
+
+msgid "Rewrites the envelope sender (Return-Path) of relayed mail. Empty = keep the CiviMail VERP address. Set it to a monitored mailbox (for example the one your bounce processing reads) if the VERP addresses of your domain have no mailbox. The X-CiviMail-Bounce header stays, so CiviCRM still recognises the bounce."
+msgstr ""
+
+msgid "Refuse - return the error; CiviMail retries in a later run"
+msgstr ""
+
+msgid "Fall back - send that message via the normal route"
+msgstr ""
+
+msgid "On failure of the relay"
+msgstr ""
+
+msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota."
+msgstr ""
+
+msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
+msgstr ""
+
+msgid "Sender"
+msgstr ""
+
+msgid "Recipient"
+msgstr ""
+
+msgid "Step"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Server reply"
+msgstr ""
+
+msgid "failed"
+msgstr ""
+
+msgid "The relay accepts this sender and recipient."
+msgstr ""
+
+msgid "The relay refused; check the settings and the relay configuration."
+msgstr ""
+
+msgid "Back to SMTP Relay settings"
+msgstr ""
+
+msgid "SMTP Relay: test connection"
+msgstr ""
+
