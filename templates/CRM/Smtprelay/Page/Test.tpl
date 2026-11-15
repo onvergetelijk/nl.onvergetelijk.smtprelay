@@ -1,6 +1,6 @@
 <div class="crm-block crm-content-block">
   <p>{ts}Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued).{/ts}</p>
-  <p>{ts}Sender{/ts}: <code>{$from|escape}</code> &middot; {ts}Recipient{/ts}: <code>{$to|escape}</code> &middot; {ts}Mode{/ts}: <strong>{$mode|escape}</strong></p>
+  <p>{ts}Sender{/ts}: <code>{$from|escape}</code> &middot; {ts}Recipient{/ts}: <code>{$to|escape}</code> &middot; {ts}Mode{/ts}: <strong>{$relayMode|escape}</strong></p>
   <table class="display">
     <thead><tr><th>{ts}Step{/ts}</th><th>{ts}Result{/ts}</th><th>{ts}Server reply{/ts}</th></tr></thead>
     <tbody>

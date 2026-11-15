@@ -18,7 +18,8 @@ class CRM_Smtprelay_Page_Test extends CRM_Core_Page {
     $this->assign('ok', $ok);
     $this->assign('from', $fromEmail);
     $this->assign('to', $to);
-    $this->assign('mode', CRM_Smtprelay_Decision::mode());
+    // 'mode' is set by CRM_Core_Page::run() itself and would overwrite ours (showed "null").
+    $this->assign('relayMode', CRM_Smtprelay_Decision::mode());
     $this->assign('settingsUrl', CRM_Utils_System::url('civicrm/admin/setting/smtprelay', 'reset=1'));
     parent::run();
   }
