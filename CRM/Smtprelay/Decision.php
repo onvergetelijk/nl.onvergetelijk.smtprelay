@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 /**
  * Decides per message whether it goes via the relay. Pure: everything comes in as arguments, so the
@@ -26,15 +27,22 @@ class CRM_Smtprelay_Decision {
   }
 
   /**
-   * @param array    $headers      Message headers as the mailer receives them.
-   * @param string   $mode         'off' | 'shadow' | 'on'.
-   * @param int      $minimum      Size rule: at least this many recipients (0 = rule off).
-   * @param int[]    $mailingIds   Mailing IDs that always go via the relay.
-   * @param callable $size         fn(int $job): ?array ['mailing_id' => int, 'is_test' => bool, 'recipients' => int]
-   * @param string   $sep          verpSeparator.
+   * @param array $headers
+   *   Message headers as the mailer receives them.
+   * @param string $mode
+   *   'off' | 'shadow' | 'on'.
+   * @param int $minimum
+   *   Size rule: at least this many recipients (0 = rule off).
+   * @param int[] $mailingIds
+   *   Mailing IDs that always go via the relay.
+   * @param callable $size
+   *   fn(int $job): ?array ['mailing_id' => int, 'is_test' => bool, 'recipients' => int].
+   * @param string $sep
+   *   The verpSeparator of the site.
    *
-   * @return array ['route' => 'relay'|'default', 'reason' => string, 'would_relay' => bool,
-   *                'job' => ?int, 'mailing_id' => ?int, 'recipients' => ?int]
+   * @return array
+   *   ['route' => 'relay'|'default', 'reason' => string, 'would_relay' => bool,
+   *   'job' => ?int, 'mailing_id' => ?int, 'recipients' => ?int]
    */
   public static function decide(array $headers, string $mode, int $minimum, array $mailingIds, callable $size, string $sep = '.'): array {
     $out = ['route' => 'default', 'reason' => '', 'would_relay' => FALSE, 'job' => NULL, 'mailing_id' => NULL, 'recipients' => NULL];

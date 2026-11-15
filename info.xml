@@ -18,7 +18,7 @@
     <url desc="Licensing">https://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2026-11-15</releaseDate>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <develStage>beta</develStage>
   <compatibility mode="semver">
     <comments>Semantic versioning. For example, compatibility with "6.1" implies compatibility with "6.2".</comments>
@@ -39,15 +39,12 @@
   <comments>Developed for Stichting Onvergetelijke Zomerkampen (NL). Default mode is off: installing changes nothing until you configure a rule and switch to shadow or on.</comments>
   <classloader>
     <psr0 prefix="CRM_" path="."/>
-    <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
   <civix>
     <namespace>CRM/Smtprelay</namespace>
     <format>25.10.2</format>
-    <angularModule>crmSmtprelay</angularModule>
   </civix>
   <mixins>
-    <mixin>mgd-php@2.0.0</mixin>
     <mixin>scan-classes@1.0.0</mixin>
     <mixin>setting-php@1.0.0</mixin>
     <mixin>setting-admin@1.1.0</mixin>

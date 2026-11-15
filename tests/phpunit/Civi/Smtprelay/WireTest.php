@@ -24,7 +24,8 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
 
   private const KEYS = ['smtprelay_mode', 'smtprelay_min_recipients', 'smtprelay_host', 'smtprelay_port',
     'smtprelay_security', 'smtprelay_auth', 'smtprelay_helo', 'smtprelay_envelope_from', 'smtprelay_username',
-    'smtprelay_password', 'smtprelay_on_failure'];
+    'smtprelay_password', 'smtprelay_on_failure',
+  ];
 
   private $process;
 
@@ -54,7 +55,9 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     return $job;
   }
 
-  /** Starts the sink and returns its port. */
+  /**
+   * Starts the sink and returns its port.
+   */
   private function sink(): int {
     $this->log = tempnam(sys_get_temp_dir(), 'smtprelay-sink-');
     $this->process = proc_open([PHP_BINARY, __DIR__ . '/../../fixtures/smtp-sink.php', $this->log],
@@ -65,7 +68,9 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     return $port;
   }
 
-  /** Commands the sink received, after its session ended. */
+  /**
+   * Commands the sink received, after its session ended.
+   */
   private function commands(): array {
     for ($i = 0; $i < 50 && proc_get_status($this->process)['running']; $i++) {
       usleep(100000);
@@ -99,8 +104,14 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     $s->set('smtprelay_on_failure', 'refuse');
 
     $verp    = "b.$job.1.0123456789abcdef@example.org";
-    $headers = ['From' => 'info@example.org', 'To' => 'x@example.org', 'Subject' => 'WireTest',
-      'Precedence' => 'bulk', 'X-CiviMail-Bounce' => $verp, 'Return-Path' => $verp];
+    $headers = [
+      'From' => 'info@example.org',
+      'To' => 'x@example.org',
+      'Subject' => 'WireTest',
+      'Precedence' => 'bulk',
+      'X-CiviMail-Bounce' => $verp,
+      'Return-Path' => $verp,
+    ];
     $scope  = \CRM_Core_TemporaryErrorScope::ignoreException();
     $router = new UnfilteredRouter($this->defaultMustNotBeUsed());
     $result = $router->send(['x@example.org'], $headers, "Body\n");
@@ -135,8 +146,14 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     $s->set('smtprelay_on_failure', 'refuse');
 
     $verp    = "b.$job.1.0123456789abcdef@example.org";
-    $headers = ['From' => 'info@example.org', 'To' => 'x@example.org', 'Subject' => 'WireTest',
-      'Precedence' => 'bulk', 'X-CiviMail-Bounce' => $verp, 'Return-Path' => $verp];
+    $headers = [
+      'From' => 'info@example.org',
+      'To' => 'x@example.org',
+      'Subject' => 'WireTest',
+      'Precedence' => 'bulk',
+      'X-CiviMail-Bounce' => $verp,
+      'Return-Path' => $verp,
+    ];
     $scope  = \CRM_Core_TemporaryErrorScope::ignoreException();
     $router = new UnfilteredRouter($this->defaultMustNotBeUsed());
     $result = $router->send(['x@example.org'], $headers, "Body\n");
@@ -160,8 +177,14 @@ class WireTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     $s->set('smtprelay_envelope_from', 'bounces@example.org');
 
     $verp    = "b.$job.1.0123456789abcdef@example.org";
-    $headers = ['From' => '"Example" <info@example.org>', 'To' => 'x@example.org', 'Subject' => 'WireTest',
-      'Precedence' => 'bulk', 'X-CiviMail-Bounce' => $verp, 'Return-Path' => $verp];
+    $headers = [
+      'From' => '"Example" <info@example.org>',
+      'To' => 'x@example.org',
+      'Subject' => 'WireTest',
+      'Precedence' => 'bulk',
+      'X-CiviMail-Bounce' => $verp,
+      'Return-Path' => $verp,
+    ];
     // The default route must not be used here; this one would fail the test if it were.
     $router = new UnfilteredRouter($this->defaultMustNotBeUsed());
     $result = $router->send(['x@example.org'], $headers, "Body\n");

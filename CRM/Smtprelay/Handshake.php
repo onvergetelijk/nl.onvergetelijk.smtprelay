@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 /**
  * Tests the relay without sending anything: connect, TLS, authenticate, MAIL FROM, RCPT TO, RSET,
@@ -47,15 +48,6 @@ class CRM_Smtprelay_Handshake {
     }
     $transport->disconnect();
     return $steps;
-  }
-
-  /**
-   * Bare address from "Name <address>".
-   *
-   * @deprecated since 1.1, use CRM_Smtprelay_Policy::address().
-   */
-  public static function address(string $value): string {
-    return CRM_Smtprelay_Policy::address($value);
   }
 
 }

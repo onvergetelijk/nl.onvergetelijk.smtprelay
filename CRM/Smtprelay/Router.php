@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 // The PEAR_MAIL_SMTP_ERROR_* constants, also when no relay transport has been built yet.
 require_once 'Mail/smtp.php';
@@ -20,25 +21,30 @@ class CRM_Smtprelay_Router extends Mail {
    */
   public const TEMPORARY = 'Failed to write to socket';
 
-  /** @var Mail */
+  /**
+   * The mailer CiviCRM built (default route).
+   *
+   * @var Mail
+   */
   protected $default;
 
-  /** @var Mail[] Relay transports per sender address, built on the first relayed message of this process. */
+  /**
+   * Relay transports per sender address, built on the first relayed message of this process.
+   *
+   * @var Mail[]
+   */
   protected $relays = [];
 
   public function __construct($default) {
     $this->default = $default;
   }
 
-  // Properties and other methods belong to the wrapped mailer; keep the router transparent.
-  public function &__get($name) {
-    return $this->default->$name;
-  }
+  // Other methods (for example getDelegate() or addFilter() of a filtered mailer) belong to the wrapped
+  // mailer. Properties are not passed on: core only reads $mailer->sep (CRM_Utils_Mail::pickDefaultEol,
 
-  public function __set($name, $value) {
-    $this->default->$name = $value;
-  }
-
+  /**
+   * via property_exists), which the PEAR base class Mail already declares.
+   */
   public function __call($name, $args) {
     return call_user_func_array([$this->default, $name], $args);
   }

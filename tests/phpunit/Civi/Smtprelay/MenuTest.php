@@ -16,7 +16,8 @@ class MenuTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface 
     $menu = [[
       'attributes' => ['name' => 'Administer', 'label' => 'Administer'],
       'child' => [['attributes' => ['name' => 'System Settings', 'label' => 'System Settings'], 'child' => []]],
-    ]];
+    ],
+    ];
     \CRM_Utils_Hook::navigationMenu($menu);
     $links = array_values(array_filter($menu[0]['child'][0]['child'],
       fn($c) => strpos((string) ($c['attributes']['url'] ?? ''), 'civicrm/admin/setting/smtprelay') === 0));

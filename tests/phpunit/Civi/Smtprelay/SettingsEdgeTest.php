@@ -19,7 +19,8 @@ class SettingsEdgeTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
 
   public function tearDown(): void {
     foreach (['smtprelay_mode', 'smtprelay_mailing_ids', 'smtprelay_host', 'smtprelay_port', 'smtprelay_security',
-      'smtprelay_auth', 'smtprelay_helo'] as $k) {
+      'smtprelay_auth', 'smtprelay_helo',
+    ] as $k) {
       \Civi::settings()->revert($k);
     }
     parent::tearDown();
@@ -53,7 +54,8 @@ class SettingsEdgeTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
    */
   public function testRefusedSettings(array $settings, string $expect): void {
     $s = \Civi::settings();
-    $s->set('smtprelay_host', 'smtp-relay.gmail.com');
+    // A public IP literal: no DNS lookup needed for the cases that pass the host policy.
+    $s->set('smtprelay_host', '8.8.8.8');
     foreach ($settings as $k => $v) {
       $s->set($k, $v);
     }
@@ -81,7 +83,8 @@ class SettingsEdgeTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
       $this->assertTrue(\CRM_Smtprelay_Policy::isPublicIp($ip), $ip);
     }
     foreach (['127.0.0.1', '10.0.0.1', '192.168.1.1', '169.254.1.1', '100.64.0.1', '198.18.0.1', '192.0.0.8', '0.1.2.3',
-      '::1', 'fe80::1', 'fc00::1', '64:ff9b::a00:1', '2002:a00:1::1', '::ffff:10.0.0.1'] as $ip) {
+      '::1', 'fe80::1', 'fc00::1', '64:ff9b::a00:1', '2002:a00:1::1', '::ffff:10.0.0.1',
+    ] as $ip) {
       $this->assertFalse(\CRM_Smtprelay_Policy::isPublicIp($ip), $ip);
     }
   }

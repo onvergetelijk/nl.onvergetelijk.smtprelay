@@ -37,7 +37,9 @@ class TranslationTest extends \PHPUnit\Framework\TestCase implements EndToEndInt
     return array_values(array_unique($strings));
   }
 
-  /** msgid => msgstr from a .po/.pot file (single-line entries, as written by this extension). */
+  /**
+   * msgid => msgstr from a .po/.pot file (single-line entries, as written by this extension).
+   */
   private function poEntries(string $file): array {
     preg_match_all('/^msgid "((?:[^"\\\\]|\\\\.)*)"\nmsgstr "((?:[^"\\\\]|\\\\.)*)"/m', file_get_contents($file), $m, PREG_SET_ORDER);
     $out = [];

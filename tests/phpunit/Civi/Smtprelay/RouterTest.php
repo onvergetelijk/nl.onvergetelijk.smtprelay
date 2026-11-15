@@ -8,7 +8,7 @@ use Civi\Test\EndToEndInterface;
 /**
  * The router as a mailer, with recording fake mailers (nothing is sent).
  *
- * - Mode 'off' does not hook in; 'shadow' does.
+ * - Mode 'shadow' hooks in (that 'off' does not is covered by HookOrderTest).
  * - Reminders and mailings below the rule go to the default mailer; shadow sends everything there.
  * - A matching mailing goes to the relay with the configured envelope sender; X-CiviMail-Bounce stays.
  * - Relay failure: 'refuse' returns the error without touching the default route; 'fallback' sends
@@ -25,10 +25,18 @@ class RouterTest extends \PHPUnit\Framework\TestCase implements EndToEndInterfac
 
   private const KEYS = ['smtprelay_mode', 'smtprelay_min_recipients', 'smtprelay_mailing_ids', 'smtprelay_envelope_from', 'smtprelay_on_failure'];
 
-  /** @var int Job of a real mailing on this site that has recipients. */
+  /**
+   * Job of a real mailing on this site that has recipients.
+   *
+   * @var int
+   */
   private $job;
 
-  /** @var int Its recipient count. */
+  /**
+   * Its recipient count.
+   *
+   * @var int
+   */
   private $count;
 
   public function setUp(): void {
@@ -58,22 +66,20 @@ class RouterTest extends \PHPUnit\Framework\TestCase implements EndToEndInterfac
 
   private function bulk(): array {
     $verp = "b.{$this->job}.1.0123456789abcdef@example.org";
-    return ['From' => '"Example" <info@example.org>', 'To' => 'x@example.org', 'Subject' => 'RouterTest',
-      'Precedence' => 'bulk', 'X-CiviMail-Bounce' => $verp, 'Return-Path' => $verp];
+    return [
+      'From' => '"Example" <info@example.org>',
+      'To' => 'x@example.org',
+      'Subject' => 'RouterTest',
+      'Precedence' => 'bulk',
+      'X-CiviMail-Bounce' => $verp,
+      'Return-Path' => $verp,
+    ];
   }
 
   private function router(FakeMailer $default, ?FakeMailer $relay): TestableRouter {
     $r = new TestableRouter($default);
     $r->fakeRelay = $relay;
     return $r;
-  }
-
-  public function testOffDoesNotHookIn(): void {
-    $this->set('off', 1);
-    $original = new FakeMailer();
-    $e = GenericHookEvent::create(['mailer' => $original, 'driver' => 'smtp', 'params' => []]);
-    smtprelay_alter_mailer($e);
-    $this->assertSame($original, $e->mailer);
   }
 
   public function testShadowHooksIn(): void {
@@ -287,7 +293,11 @@ class TestableRouter extends \CRM_Smtprelay_Router {
 
   public $fakeRelay = NULL;
 
-  /** @var int[] Mailings that would have been paused (the test does not touch real mailings). */
+  /**
+   * Mailings that would have been paused (the test does not touch real mailings).
+   *
+   * @var int[]
+   */
   public $paused = [];
 
   protected function pauseMailing(int $mailingId): void {

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 require_once 'Mail.php';
 require_once 'Mail/smtp.php';
@@ -15,7 +16,11 @@ require_once 'Net/SMTP.php';
  */
 class CRM_Smtprelay_Transport extends Mail_smtp {
 
-  /** @var string 'starttls' | 'ssl' | 'none' */
+  /**
+   * Encryption: 'starttls', 'ssl' or 'none'.
+   *
+   * @var string
+   */
   public $security = 'starttls';
 
   public function __construct($params) {

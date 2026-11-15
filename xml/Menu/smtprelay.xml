@@ -2,7 +2,7 @@
 <menu>
   <item>
     <path>civicrm/admin/setting/smtprelay/test</path>
-    <page_callback>CRM_Smtprelay_Page_Test</page_callback>
+    <page_callback>CRM_Smtprelay_Form_Test</page_callback>
     <title>SMTP Relay: test connection</title>
     <access_arguments>administer CiviCRM;administer smtprelay</access_arguments>
   </item>

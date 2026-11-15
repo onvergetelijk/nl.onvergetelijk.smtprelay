@@ -9,10 +9,13 @@ msgstr ""
 msgid "SMTP Relay: test connection"
 msgstr ""
 
-msgid "The form has expired. Open the page again and retry."
+msgid "Recipient"
 msgstr ""
 
 msgid "The recipient is not a valid e-mail address."
+msgstr ""
+
+msgid "Run test"
 msgstr ""
 
 msgid "Off - nothing is routed, the relay is not even hooked in"
@@ -120,28 +123,22 @@ msgstr ""
 msgid "SMTP Relay settings"
 msgstr ""
 
-msgid "The relay host, port or username changed: enter the password again."
-msgstr ""
-
 msgid "Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None."
 msgstr ""
 
-msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
+msgid "With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS)."
 msgstr ""
 
-msgid "With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS)."
+msgid "The relay host, port or username changed: enter the password again."
+msgstr ""
+
+msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
 msgstr ""
 
 msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
 msgstr ""
 
 msgid "Sender"
-msgstr ""
-
-msgid "Recipient"
-msgstr ""
-
-msgid "Run test"
 msgstr ""
 
 msgid "Step"
@@ -151,6 +148,9 @@ msgid "Result"
 msgstr ""
 
 msgid "Server reply"
+msgstr ""
+
+msgid "ok"
 msgstr ""
 
 msgid "failed"

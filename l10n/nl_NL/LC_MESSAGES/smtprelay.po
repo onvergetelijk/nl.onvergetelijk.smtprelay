@@ -11,11 +11,14 @@ msgstr ""
 msgid "SMTP Relay: test connection"
 msgstr "SMTP Relay: verbinding testen"
 
-msgid "The form has expired. Open the page again and retry."
-msgstr "Het formulier is verlopen. Open de pagina opnieuw en probeer het nog een keer."
+msgid "Recipient"
+msgstr "Ontvanger"
 
 msgid "The recipient is not a valid e-mail address."
 msgstr "De ontvanger is geen geldig emailadres."
+
+msgid "Run test"
+msgstr "Test uitvoeren"
 
 msgid "Off - nothing is routed, the relay is not even hooked in"
 msgstr "Uit - er wordt niets omgeleid, de relay wordt niet eens ingehaakt"
@@ -122,29 +125,23 @@ msgstr "Weigeren is het veiligst als de relay er is vanwege een daglimiet op de 
 msgid "SMTP Relay settings"
 msgstr "Instellingen SMTP Relay"
 
-msgid "The relay host, port or username changed: enter the password again."
-msgstr "De relayserver, poort of gebruikersnaam is gewijzigd: vul het wachtwoord opnieuw in."
-
 msgid "Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None."
 msgstr "Inloggegevens gaan alleen via TLS: kies STARTTLS of direct TLS, of zet Inloggen op Geen."
 
-msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
-msgstr "Voor het kiezen van OAuth, of het wijzigen van de relayserver, poort of versleuteling daarbij, is de permissie \"manage OAuth client secrets\" nodig."
-
 msgid "With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS)."
 msgstr "Bij OAuth moet de relayserver bij de provider van het token horen (Google: smtp-relay.gmail.com of smtp.gmail.com, poort 587 met STARTTLS of 465 met direct TLS)."
+
+msgid "The relay host, port or username changed: enter the password again."
+msgstr "De relayserver, poort of gebruikersnaam is gewijzigd: vul het wachtwoord opnieuw in."
+
+msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
+msgstr "Voor het kiezen van OAuth, of het wijzigen van de relayserver, poort of versleuteling daarbij, is de permissie \"manage OAuth client secrets\" nodig."
 
 msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
 msgstr "Handdruk met de relay: verbinden, inloggen, MAIL FROM en RCPT TO, daarna RSET. Er wordt geen bericht verstuurd (DATA wordt nooit gegeven)."
 
 msgid "Sender"
 msgstr "Afzender"
-
-msgid "Recipient"
-msgstr "Ontvanger"
-
-msgid "Run test"
-msgstr "Test uitvoeren"
 
 msgid "Step"
 msgstr "Stap"
@@ -154,6 +151,9 @@ msgstr "Uitkomst"
 
 msgid "Server reply"
 msgstr "Antwoord van de server"
+
+msgid "ok"
+msgstr "ok"
 
 msgid "failed"
 msgstr "mislukt"

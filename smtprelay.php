@@ -84,8 +84,9 @@ function smtprelay_civicrm_buildForm($formName, &$form): void {
 }
 
 /**
- * Implements hook_civicrm_postProcess(): restore the stored password after a save with an empty field
- * (see smtprelay_civicrm_buildForm).
+ * Implements hook_civicrm_postProcess().
+ *
+ * Restores the stored password after a save with an empty field (see smtprelay_civicrm_buildForm).
  */
 function smtprelay_civicrm_postProcess($formName, $form): void {
   if (_smtprelay_is_settings_form($formName) && isset(\Civi::$statics['smtprelay']['password_kept'])) {
@@ -112,8 +113,15 @@ function smtprelay_civicrm_validateForm($formName, &$fields, &$files, &$form, &$
   $host     = strtolower(trim((string) ($fields['smtprelay_host'] ?? $s->get('smtprelay_host'))));
   $port     = (int) ($fields['smtprelay_port'] ?? $s->get('smtprelay_port'));
 
-  if (!in_array($port, CRM_Smtprelay_Policy::PORTS, TRUE)) {
-    $errors['smtprelay_port'] = E::ts('Allowed: 25, 465, 587 or 2525.');
+  // The network-free rules of the send path (an empty host is allowed here: it switches the relay off).
+  $violations = CRM_Smtprelay_Policy::violations(['host' => $host, 'port' => $port, 'security' => $security, 'auth' => $auth]);
+  $messages   = [
+    'port'       => ['smtprelay_port', E::ts('Allowed: 25, 465, 587 or 2525.')],
+    'tls'        => ['smtprelay_security', E::ts('Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None.')],
+    'oauth_host' => ['smtprelay_host', E::ts('With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS).')],
+  ];
+  foreach (array_intersect_key($messages, $violations) as [$field, $message]) {
+    $errors[$field] = $message;
   }
   // A kept password goes wherever host, port and username point. Changing those with the password
   // left empty would deliver the stored password to the new server (which an administrator could
@@ -124,9 +132,6 @@ function smtprelay_civicrm_validateForm($formName, &$fields, &$files, &$form, &$
         || trim((string) $s->get('smtprelay_username')) !== trim((string) ($fields['smtprelay_username'] ?? $s->get('smtprelay_username'))))) {
     $errors['smtprelay_password'] = E::ts('The relay host, port or username changed: enter the password again.');
   }
-  if ($auth !== 'none' && $security === 'none') {
-    $errors['smtprelay_security'] = E::ts('Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None.');
-  }
   if ($auth === 'oauth') {
     $changed = $s->get('smtprelay_auth') !== 'oauth'
       || strtolower(trim((string) $s->get('smtprelay_host'))) !== $host
@@ -134,15 +139,6 @@ function smtprelay_civicrm_validateForm($formName, &$fields, &$files, &$form, &$
       || (string) $s->get('smtprelay_security') !== $security;
     if ($changed && !CRM_Core_Permission::check('manage OAuth client secrets')) {
       $errors['smtprelay_auth'] = E::ts('Choosing OAuth or changing its relay host, port or encryption requires the permission "manage OAuth client secrets".');
-    }
-    $known = FALSE;
-    foreach (CRM_Smtprelay_Policy::OAUTH_PROFILES as $provider => $hosts) {
-      if (CRM_Smtprelay_Policy::checkOauthTarget($provider, ['host' => $host, 'port' => $port, 'security' => $security]) === TRUE) {
-        $known = TRUE;
-      }
-    }
-    if (!$known && $host !== '') {
-      $errors['smtprelay_host'] = E::ts('With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS).');
     }
   }
 }
@@ -179,14 +175,16 @@ function smtprelay_navigation_label(\Civi\Core\Event\GenericHookEvent $e): void 
   }
   $walk($e->params, function (&$item) use ($path, &$found) {
     if (!$found && ($item['attributes']['name'] ?? '') === 'System Settings') {
-      $item['child'][] = ['attributes' => [
-        'label'               => E::ts('SMTP Relay settings'),
-        'name'                => 'smtprelay_setting_admin',
-        'url'                 => $path . '?reset=1',
-        'permission'          => 'administer CiviCRM,administer smtprelay',
-        'permission_operator' => 'OR',
-        'active'              => 1,
-      ]];
+      $item['child'][] = [
+        'attributes' => [
+          'label'               => E::ts('SMTP Relay settings'),
+          'name'                => 'smtprelay_setting_admin',
+          'url'                 => $path . '?reset=1',
+          'permission'          => 'administer CiviCRM,administer smtprelay',
+          'permission_operator' => 'OR',
+          'active'              => 1,
+        ],
+      ];
       $found = TRUE;
     }
   });

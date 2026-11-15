@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /**
  * Settings for SMTP Relay. They appear automatically on Administer > System Settings > SMTP Relay
  * (civicrm/admin/setting/smtprelay) through the setting-admin mixin, because group = 'smtprelay'.

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 /**
  * What the relay may connect to, and with which protection. Every check here fails closed: a value
@@ -45,7 +46,9 @@ class CRM_Smtprelay_Policy {
    */
   private const EXTRA_V4 = ['100.64.0.0/10', '198.18.0.0/15', '192.0.0.0/24', '0.0.0.0/8'];
 
-  /** IPv6 prefixes that embed or translate IPv4 addresses (and could reach private ones). */
+  /**
+   * IPv6 prefixes that embed or translate IPv4 addresses (and could reach private ones).
+   */
   private const EXTRA_V6 = ['64:ff9b::', '64:ff9b:1:', '2002:', '::ffff:'];
 
   /**
@@ -57,38 +60,18 @@ class CRM_Smtprelay_Policy {
    * @return array|PEAR_Error ['host' => string, 'port' => int, 'security' => string, 'auth' => string]
    */
   public static function target(bool $allowLocal = FALSE) {
-    $s        = \Civi::settings();
-    $host     = strtolower(trim((string) $s->get('smtprelay_host')));
-    $port     = (int) $s->get('smtprelay_port');
-    $security = (string) $s->get('smtprelay_security');
-    $auth     = (string) $s->get('smtprelay_auth');
-
-    if ($host === '') {
-      return PEAR::raiseError('smtprelay: no relay host configured', self::CONFIG);
+    $s      = \Civi::settings();
+    $target = [
+      'host'     => strtolower(trim((string) $s->get('smtprelay_host'))),
+      'port'     => (int) $s->get('smtprelay_port'),
+      'security' => (string) $s->get('smtprelay_security'),
+      'auth'     => (string) $s->get('smtprelay_auth'),
+    ];
+    $violations = self::violations($target, $allowLocal);
+    if ($violations) {
+      return PEAR::raiseError('smtprelay: ' . reset($violations), self::CONFIG);
     }
-    if (!in_array($security, self::SECURITY, TRUE)) {
-      return PEAR::raiseError('smtprelay: unknown encryption setting', self::CONFIG);
-    }
-    if (!in_array($auth, self::AUTH, TRUE)) {
-      return PEAR::raiseError('smtprelay: unknown authentication setting', self::CONFIG);
-    }
-    if ($auth !== 'none' && $security === 'none') {
-      return PEAR::raiseError('smtprelay: credentials are only sent over TLS; Encryption = none needs Authentication = none', self::CONFIG);
-    }
-    if (!$allowLocal && !in_array($port, self::PORTS, TRUE)) {
-      return PEAR::raiseError('smtprelay: port ' . $port . ' is not allowed (allowed: ' . implode(', ', self::PORTS) . ')', self::CONFIG);
-    }
-    $target = ['host' => $host, 'port' => $port, 'security' => $security, 'auth' => $auth];
-    // OAuth: first gate, before any token is looked up - the target must be the relay of SOME known
-    // provider. CRM_Smtprelay_Credentials::oauth() then checks it against the token's own provider.
-    // Not relaxed by $allowLocal: a token never goes to a test sink either.
-    if ($auth === 'oauth') {
-      $allowed = self::checkAnyOauthTarget($target);
-      if (is_a($allowed, 'PEAR_Error')) {
-        return $allowed;
-      }
-    }
-    $ips = self::checkHost($host, $allowLocal);
+    $ips = self::checkHost($target['host'], $allowLocal);
     if (is_a($ips, 'PEAR_Error')) {
       return $ips;
     }
@@ -98,6 +81,48 @@ class CRM_Smtprelay_Policy {
     $v4 = array_values(array_filter($ips, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)));
     $target['ip'] = $v4[0] ?? NULL;
     return $target;
+  }
+
+  /**
+   * The rules that need no network: the same list serves the settings form (validateForm, which
+   * shows them per field) and the send path (target(), which refuses on the first one).
+   *
+   * @param array $target
+   *   Keys 'host', 'port', 'security', 'auth'.
+   * @param bool $allowLocal
+   *   Tests only: any port.
+   *
+   * @return string[]
+   *   Violation code => message, in order of importance; empty when the target is fine.
+   *   Codes: no_host, security, auth, tls, port, oauth_host.
+   */
+  public static function violations(array $target, bool $allowLocal = FALSE): array {
+    $v = [];
+    if ($target['host'] === '') {
+      $v['no_host'] = 'no relay host configured';
+    }
+    if (!in_array($target['security'], self::SECURITY, TRUE)) {
+      $v['security'] = 'unknown encryption setting';
+    }
+    if (!in_array($target['auth'], self::AUTH, TRUE)) {
+      $v['auth'] = 'unknown authentication setting';
+    }
+    elseif ($target['auth'] !== 'none' && $target['security'] === 'none') {
+      $v['tls'] = 'credentials are only sent over TLS; Encryption = none needs Authentication = none';
+    }
+    if (!$allowLocal && !in_array($target['port'], self::PORTS, TRUE)) {
+      $v['port'] = 'port ' . $target['port'] . ' is not allowed (allowed: ' . implode(', ', self::PORTS) . ')';
+    }
+    // OAuth: first gate, before any token is looked up - the target must be the relay of SOME known
+    // provider. CRM_Smtprelay_Credentials::oauth() then checks it against the token's own provider.
+    // Not relaxed by $allowLocal: a token never goes to a test sink either.
+    if ($target['auth'] === 'oauth' && $target['host'] !== '') {
+      $allowed = self::checkAnyOauthTarget($target);
+      if ($allowed !== TRUE) {
+        $v['oauth_host'] = substr($allowed->getMessage(), strlen('smtprelay: '));
+      }
+    }
+    return $v;
   }
 
   /**
@@ -125,8 +150,10 @@ class CRM_Smtprelay_Policy {
    * sender first (case-insensitive, never a substring: "xinfo@" must not pick the token of "info@"),
    * then the others in the given order (default address first).
    *
-   * @param string $from       From header.
-   * @param array  $addresses  Rows with 'id' and 'email'.
+   * @param string $from
+   *   From header.
+   * @param array $addresses
+   *   Rows with 'id' and 'email'.
    *
    * @return int[]
    */

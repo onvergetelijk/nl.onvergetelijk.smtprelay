@@ -18,7 +18,9 @@ use Civi\Test\EndToEndInterface;
  */
 class HookOrderTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface {
 
-  /** @var callable */
+  /**
+   * @var callable
+   */
   private $otherWrapper;
 
   public function setUp(): void {

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 /**
  * Login data for the relay. Never logs or returns secrets other than to the transport.
@@ -7,7 +8,8 @@ class CRM_Smtprelay_Credentials {
 
   /**
    * @param string $from    From header of the message.
-   * @param array  $target  Validated target from CRM_Smtprelay_Policy::target().
+   * @param array $target
+   *   Validated target from CRM_Smtprelay_Policy::target().
    *
    * @return array|PEAR_Error|null
    *   NULL when no authentication is configured, ['auth' => method, 'username' => ..., 'password' => ...]

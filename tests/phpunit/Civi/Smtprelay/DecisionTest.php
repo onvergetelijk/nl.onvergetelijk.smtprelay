@@ -25,13 +25,15 @@ class DecisionTest extends \PHPUnit\Framework\TestCase implements EndToEndInterf
     ];
   }
 
-  /** Jobs: 101 large, 102 small, 103 test, others unknown. */
+  /**
+   * Jobs: 101 large, 102 small, 103 test, others unknown.
+   */
   private function size(): callable {
     return function (int $job): ?array {
       return [
         101 => ['mailing_id' => 11, 'is_test' => FALSE, 'recipients' => 3320],
         102 => ['mailing_id' => 12, 'is_test' => FALSE, 'recipients' => 438],
-        103 => ['mailing_id' => 11, 'is_test' => TRUE,  'recipients' => 3320],
+        103 => ['mailing_id' => 11, 'is_test' => TRUE, 'recipients' => 3320],
       ][$job] ?? NULL;
     };
   }

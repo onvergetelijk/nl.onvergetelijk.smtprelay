@@ -14,17 +14,24 @@ use Civi\Test\EndToEndInterface;
  *   any configured host received the mailbox token); without a token, an error instead of a relay
  *   without login.
  *
- * Host names used here must resolve to public addresses (the policy checks that); smtp-relay.gmail.com
- * is used for that. Nothing connects to it: transportParams() only builds parameters.
+ * No DNS: transport tests use a public IP literal (PUBLIC_IP), OAuth tests stop at the network-free
+ * gate. Only testOauthWithoutExtensionOrTokenIsAnError resolves the Google relay (it is skipped on a
+ * site with a token). Nothing connects anywhere: transportParams() only builds parameters.
  *
  * @group e2e
  */
 class CredentialsTest extends \PHPUnit\Framework\TestCase implements EndToEndInterface {
 
   private const KEYS = ['smtprelay_auth', 'smtprelay_username', 'smtprelay_password', 'smtprelay_host',
-    'smtprelay_port', 'smtprelay_security', 'smtprelay_helo'];
+    'smtprelay_port', 'smtprelay_security', 'smtprelay_helo',
+  ];
 
   private const HOST = 'smtp-relay.gmail.com';
+
+  /**
+   * A public address, so the host policy passes without a DNS lookup.
+   */
+  private const PUBLIC_IP = '8.8.8.8';
 
   public function tearDown(): void {
     foreach (self::KEYS as $k) {
@@ -43,11 +50,11 @@ class CredentialsTest extends \PHPUnit\Framework\TestCase implements EndToEndInt
   }
 
   public function testNoneGivesNoCredentialsAndSaneTransport(): void {
-    \Civi::settings()->set('smtprelay_host', self::HOST);
+    \Civi::settings()->set('smtprelay_host', self::PUBLIC_IP);
     $this->assertNull(\CRM_Smtprelay_Credentials::forSender('info@example.org', $this->target()));
     $p = \CRM_Smtprelay_Router::transportParams('"Example" <info@example.org>');
-    $this->assertNotFalse(filter_var($p['host'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4), 'connects to the checked address (no second DNS lookup)');
-    $this->assertSame(self::HOST, $p['socket_options']['ssl']['peer_name'], 'certificate checked against the host name');
+    $this->assertSame(self::PUBLIC_IP, $p['host'], 'connects to the checked address');
+    $this->assertSame(self::PUBLIC_IP, $p['socket_options']['ssl']['peer_name'], 'certificate checked against the configured name');
     $this->assertTrue($p['socket_options']['ssl']['verify_peer']);
     $this->assertSame(587, $p['port']);
     $this->assertTrue($p['starttls']);
@@ -56,13 +63,26 @@ class CredentialsTest extends \PHPUnit\Framework\TestCase implements EndToEndInt
     $this->assertSame('example.org', $p['localhost'], 'EHLO comes from the sender domain, not "localhost".');
   }
 
-  public function testImplicitTlsPrefixesHost(): void {
+  /**
+   * A host name is resolved once and the connection goes to that address (DNS rebinding), with the
+   * certificate checked against the name. The only test here that needs DNS.
+   */
+  public function testHostNameIsPinnedToCheckedAddress(): void {
+    if (!@gethostbynamel(self::HOST)) {
+      $this->markTestSkipped('no DNS');
+    }
     \Civi::settings()->set('smtprelay_host', self::HOST);
+    $p = \CRM_Smtprelay_Router::transportParams('info@example.org');
+    $this->assertNotFalse(filter_var($p['host'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4), 'connects to an address, not to the name again');
+    $this->assertSame(self::HOST, $p['socket_options']['ssl']['peer_name']);
+  }
+
+  public function testImplicitTlsPrefixesHost(): void {
+    \Civi::settings()->set('smtprelay_host', self::PUBLIC_IP);
     \Civi::settings()->set('smtprelay_security', 'ssl');
     \Civi::settings()->set('smtprelay_port', 465);
     $p = \CRM_Smtprelay_Router::transportParams('info@example.org');
-    $this->assertStringStartsWith('ssl://', $p['host']);
-    $this->assertSame(self::HOST, $p['socket_options']['ssl']['peer_name']);
+    $this->assertSame('ssl://' . self::PUBLIC_IP, $p['host']);
     $this->assertFalse($p['starttls']);
   }
 
@@ -154,8 +174,8 @@ class CredentialsTest extends \PHPUnit\Framework\TestCase implements EndToEndInt
     \Civi::settings()->set('smtprelay_port', 587);
     \Civi::settings()->set('smtprelay_security', 'starttls');
     $this->assertInstanceOf(\PEAR_Error::class, \CRM_Smtprelay_Policy::target(TRUE), 'no token to a local sink either');
-    \Civi::settings()->set('smtprelay_host', self::HOST);
-    $this->assertIsArray(\CRM_Smtprelay_Policy::target(), 'the Google relay itself passes the first gate');
+    $this->assertSame([], \CRM_Smtprelay_Policy::violations(['host' => self::HOST, 'port' => 587, 'security' => 'starttls', 'auth' => 'oauth']),
+      'the Google relay itself passes the first gate');
   }
 
   public function testTokenOrderUsesExactAddress(): void {

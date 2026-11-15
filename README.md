@@ -85,8 +85,8 @@ Since 1.1 (security review of 15-11-2026; 1.0.0 should not be used with OAuth):
   the message (an error before `DATA`); a refused address is never retried via the normal route. A
   CiviMail retry after a broken connection during `DATA` can still deliver a message twice (core
   behaviour for any SMTP route).
-- **Connection test** runs only on a POST with a session-bound key (CSRF), validates the recipient
-  address, and the relay host may not resolve to private, loopback, reserved, carrier-grade NAT or
+- **Connection test** is a standard CiviCRM form: it runs only on submit with the session-bound
+  `qfKey` (CSRF) and a valid recipient address, and the relay host may not resolve to private, loopback, reserved, carrier-grade NAT or
   IPv4-translating addresses (checked via the resolver including `/etc/hosts`, and via DNS). The
   connection goes to the checked IPv4 address, with the certificate verified against the host name, so
   a second DNS answer cannot redirect it (DNS rebinding). Residual: the server's own public address is
@@ -148,13 +148,17 @@ Tests (end-to-end against a development site; nothing is delivered):
 | `TranslationTest` | every string in the code is in the .pot and translated in each .po and .mo |
 
 Not automated: the OAuth happy path against a real relay (use the connection test page), and the
-settings form and connection test page in a browser (checked with headless Chromium for 1.1: GET runs
-nothing; POST without key or with an invalid address runs nothing; the password field stays empty;
-saving with an empty field keeps the stored password; changing the host with an empty field asks for
-the password again).
+settings form and connection test page in a browser (checked with headless Chromium for 1.1.1: opening
+the test runs nothing; an invalid address or a forged `qfKey` runs nothing; the password field stays
+empty; saving with an empty field keeps the stored password; changing the host with an empty field
+asks for the password again; a port or OAuth host outside the policy is not saved).
+
+Only one test needs DNS (`CredentialsTest::testHostNameIsPinnedToCheckedAddress`, skipped without it);
+the others use IP literals or the network-free rules (`CRM_Smtprelay_Policy::violations()`).
 
 ```bash
 phpunit9 --configuration=phpunit.xml.dist
+civilint $(git ls-files '*.php')   # buildkit: Drupal coding standard, clean since 1.1.1
 ```
 
 ## License

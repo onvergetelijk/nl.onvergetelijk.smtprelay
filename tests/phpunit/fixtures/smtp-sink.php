@@ -17,8 +17,12 @@ $conn = stream_socket_accept($server, 20);
 if (!$conn) {
   exit(1);
 }
-$write = function (string $line) use ($conn) { fwrite($conn, $line . "\r\n"); };
-$note  = function (array $entry) use ($log) { file_put_contents($log, json_encode($entry) . "\n", FILE_APPEND); };
+$write = function (string $line) use ($conn) {
+  fwrite($conn, $line . "\r\n");
+};
+$note = function (array $entry) use ($log) {
+  file_put_contents($log, json_encode($entry) . "\n", FILE_APPEND);
+};
 
 $write('220 sink ESMTP');
 while (($line = fgets($conn)) !== FALSE) {
