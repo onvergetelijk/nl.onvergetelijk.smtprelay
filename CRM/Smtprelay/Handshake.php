@@ -1,14 +1,17 @@
 <?php
 
 /**
- * Tests the relay without sending anything: connect, (STARTTLS), authenticate, MAIL FROM, RCPT TO,
- * RSET, QUIT. DATA is never sent. Secrets are never part of the output.
+ * Tests the relay without sending anything: connect, TLS, authenticate, MAIL FROM, RCPT TO, RSET,
+ * QUIT. DATA is never sent. Secrets are never part of the output.
+ *
+ * Connect, TLS and login go through CRM_Smtprelay_Transport, the same code as real relayed mail, so
+ * the test cannot log in where a mailing would not (and never without TLS).
  */
 class CRM_Smtprelay_Handshake {
 
   /**
    * @param string $from  Sender to test (for example the default From address of the domain).
-   * @param string $to    Recipient to test.
+   * @param string $to    Recipient to test (a valid e-mail address; the caller validates it).
    *
    * @return array List of ['step' => string, 'ok' => bool, 'reply' => string].
    */
@@ -18,10 +21,10 @@ class CRM_Smtprelay_Handshake {
     $add   = function (string $step, $result, $smtp = NULL) use (&$steps) {
       $ok = !is_a($result, 'PEAR_Error');
       $reply = $smtp ? implode(' ', (array) $smtp->getResponse()) : '';
-      if (!$ok && $reply === '') {
+      if (!$ok && ($reply === '' || $reply === ' ')) {
         $reply = $result->getMessage();
       }
-      $steps[] = ['step' => $step, 'ok' => $ok, 'reply' => trim(preg_replace('/\s+/', ' ', $reply))];
+      $steps[] = ['step' => $step, 'ok' => $ok, 'reply' => trim(preg_replace('/\s+/', ' ', (string) $reply))];
       return $ok;
     };
 
@@ -30,34 +33,29 @@ class CRM_Smtprelay_Handshake {
       $add('settings', $params);
       return $steps;
     }
-    $smtp = new Net_SMTP($params['host'], $params['port'], $params['localhost'], FALSE, 15);
-    if (!$add('connect', $smtp->connect(15), $smtp)) {
+    $transport = new CRM_Smtprelay_Transport(['persist' => FALSE, 'timeout' => 15] + $params);
+    $label     = 'connect' . ($params['smtprelay_security'] !== 'none' ? ', TLS' : '') . ($params['auth'] ? ', login' . (is_string($params['auth']) ? ' ' . $params['auth'] : '') : '');
+    $smtp      = $transport->getSMTPObject();
+    if (!$add($label, $smtp)) {
       return $steps;
     }
-    if ($params['auth']) {
-      $method = is_string($params['auth']) ? $params['auth'] : NULL;
-      $ok = $add('auth' . ($method ? " $method" : ''), $smtp->auth($params['username'], $params['password'], $method, (bool) $params['starttls']), $smtp);
-    }
-    elseif ($params['starttls']) {
-      $ok = $add('starttls', $smtp->starttls(), $smtp);
-    }
-    else {
-      $ok = TRUE;
-    }
-    if ($ok
-        && $add('MAIL FROM ' . self::address($from), $smtp->mailFrom(self::address($from)), $smtp)
-        && $add('RCPT TO ' . self::address($to), $smtp->rcptTo(self::address($to)), $smtp)) {
+    $fromAddress = CRM_Smtprelay_Policy::address($from);
+    $toAddress   = CRM_Smtprelay_Policy::address($to);
+    if ($add('MAIL FROM', $smtp->mailFrom($fromAddress), $smtp)
+        && $add('RCPT TO', $smtp->rcptTo($toAddress), $smtp)) {
       $add('RSET', $smtp->rset(), $smtp);
     }
-    $smtp->disconnect();
+    $transport->disconnect();
     return $steps;
   }
 
   /**
    * Bare address from "Name <address>".
+   *
+   * @deprecated since 1.1, use CRM_Smtprelay_Policy::address().
    */
   public static function address(string $value): string {
-    return preg_match('/[\w.+-]+@[\w.-]+/', $value, $m) ? $m[0] : $value;
+    return CRM_Smtprelay_Policy::address($value);
   }
 
 }

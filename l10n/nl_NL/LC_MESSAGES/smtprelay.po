@@ -8,6 +8,15 @@ msgstr ""
 "Language: nl_NL\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "SMTP Relay: test connection"
+msgstr "SMTP Relay: verbinding testen"
+
+msgid "The form has expired. Open the page again and retry."
+msgstr "Het formulier is verlopen. Open de pagina opnieuw en probeer het nog een keer."
+
+msgid "The recipient is not a valid e-mail address."
+msgstr "De ontvanger is geen geldig emailadres."
+
 msgid "Off - nothing is routed, the relay is not even hooked in"
 msgstr "Uit - er wordt niets omgeleid, de relay wordt niet eens ingehaakt"
 
@@ -38,11 +47,14 @@ msgstr "CiviMail-mailing-ID's, gescheiden door komma's, die altijd via de relay 
 msgid "Relay host"
 msgstr "Relayserver"
 
-msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. Empty = relay not configured: matching mailings are refused (or fall back, see On failure)."
-msgstr "Bijvoorbeeld smtp-relay.gmail.com (SMTP-relayservice van Google Workspace) of de SMTP-server van een bulkmaildienst. Leeg = geen relay ingesteld: mailings die aan een regel voldoen worden geweigerd (of vallen terug, zie Bij een fout)."
+msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. The host must resolve to public addresses only. Empty = relay not configured: matching mailings wait (or fall back, see On failure)."
+msgstr "Bijvoorbeeld smtp-relay.gmail.com (SMTP-relayservice van Google Workspace) of de SMTP-server van een bulkmaildienst. De server moet uitsluitend naar openbare adressen verwijzen. Leeg = geen relay ingesteld: mailings die aan een regel voldoen wachten (of vallen terug, zie Bij een fout)."
 
 msgid "Relay port"
 msgstr "Poort"
+
+msgid "Allowed: 25, 465, 587 or 2525."
+msgstr "Toegestaan: 25, 465, 587 of 2525."
 
 msgid "STARTTLS (usually port 587)"
 msgstr "STARTTLS (meestal poort 587)"
@@ -50,8 +62,8 @@ msgstr "STARTTLS (meestal poort 587)"
 msgid "Implicit TLS (usually port 465)"
 msgstr "Direct TLS (meestal poort 465)"
 
-msgid "None (local testing only)"
-msgstr "Geen (alleen voor lokaal testen)"
+msgid "None (local testing only, never with authentication)"
+msgstr "Geen (alleen voor lokaal testen, nooit met inloggen)"
 
 msgid "Encryption"
 msgstr "Versleuteling"
@@ -74,8 +86,8 @@ msgstr "OAuth-token van oauth_outgoing_mail (XOAUTH2)"
 msgid "Authentication"
 msgstr "Inloggen"
 
-msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. Tested with the Google Workspace SMTP relay (smtp-relay.gmail.com accepts XOAUTH2 with the username set to the mailbox address)."
-msgstr "OAuth gebruikt het systeemtoken dat de extensie OAuth Outgoing Mail voor het afzenderadres bijhoudt; er wordt geen wachtwoord opgeslagen. Getest met de SMTP-relay van Google Workspace (smtp-relay.gmail.com accepteert XOAUTH2 met het mailboxadres als gebruikersnaam)."
+msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. The token only goes to the relay of its own provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS); other hosts are refused. Choosing or changing OAuth requires the permission \"manage OAuth client secrets\". Credentials are only ever sent over TLS."
+msgstr "OAuth gebruikt het systeemtoken dat de extensie OAuth Outgoing Mail voor het afzenderadres bijhoudt; er wordt geen wachtwoord opgeslagen. Het token gaat alleen naar de relay van zijn eigen provider (Google: smtp-relay.gmail.com of smtp.gmail.com, poort 587 met STARTTLS of 465 met direct TLS); andere servers worden geweigerd. Voor het kiezen of wijzigen van OAuth is de permissie \"manage OAuth client secrets\" nodig. Inloggegevens gaan altijd versleuteld (TLS) over de lijn."
 
 msgid "Username"
 msgstr "Gebruikersnaam"
@@ -86,8 +98,8 @@ msgstr "Alleen bij Inloggen = Gebruikersnaam en wachtwoord. Bij OAuth komt de ge
 msgid "Password"
 msgstr "Wachtwoord"
 
-msgid "Only for Authentication = Username and password. Values encrypted with CiviCRM crypto.token are decrypted on use; plain values work too but are stored as entered."
-msgstr "Alleen bij Inloggen = Gebruikersnaam en wachtwoord. Een waarde die met CiviCRM crypto.token is versleuteld, wordt bij gebruik ontsleuteld; een gewone waarde werkt ook, maar wordt opgeslagen zoals ingevoerd."
+msgid "Only for Authentication = Username and password. Stored encrypted with CiviCRM crypto (key tag CRED; without CIVICRM_CRED_KEYS the value stays readable in the database) and never shown again. Leave empty to keep the stored password; after changing host, port or username enter it again."
+msgstr "Alleen bij Inloggen = Gebruikersnaam en wachtwoord. Wordt versleuteld opgeslagen met CiviCRM crypto (sleuteltag CRED; zonder CIVICRM_CRED_KEYS blijft de waarde leesbaar in de database) en nooit meer getoond. Laat leeg om het opgeslagen wachtwoord te houden; vul het opnieuw in na een wijziging van server, poort of gebruikersnaam."
 
 msgid "Envelope sender (bounces)"
 msgstr "Envelop-afzender (bounces)"
@@ -95,8 +107,8 @@ msgstr "Envelop-afzender (bounces)"
 msgid "Rewrites the envelope sender (Return-Path) of relayed mail. Empty = keep the CiviMail VERP address. Set it to a monitored mailbox (for example the one your bounce processing reads) if the VERP addresses of your domain have no mailbox. The X-CiviMail-Bounce header stays, so CiviCRM still recognises the bounce."
 msgstr "Vervangt de envelop-afzender (Return-Path) van mail via de relay. Leeg = het VERP-adres van CiviMail blijft staan. Vul een mailbox in die gelezen wordt (bijvoorbeeld die van de bounceverwerking) als de VERP-adressen van je domein geen mailbox hebben. De kop X-CiviMail-Bounce blijft staan, dus CiviCRM herkent de bounce nog steeds."
 
-msgid "Refuse - return the error; CiviMail retries in a later run"
-msgstr "Weigeren - de fout teruggeven; CiviMail probeert het in een volgende run opnieuw"
+msgid "Refuse - pause the mailing; CiviMail resumes it in a later run"
+msgstr "Weigeren - de mailing pauzeert; CiviMail gaat er in een volgende run mee verder"
 
 msgid "Fall back - send that message via the normal route"
 msgstr "Terugvallen - dat bericht via de gewone route versturen"
@@ -104,8 +116,23 @@ msgstr "Terugvallen - dat bericht via de gewone route versturen"
 msgid "On failure of the relay"
 msgstr "Bij een fout van de relay"
 
-msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota."
-msgstr "Weigeren is het veiligst als de relay er is vanwege een dagquotum op de gewone route: terugvallen zou juist dat quotum opmaken."
+msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota. Either way a relay problem never counts as a bounce, and a message the relay may already have accepted (an error during DATA) is not sent again via the normal route."
+msgstr "Weigeren is het veiligst als de relay er is vanwege een daglimiet op de gewone route: terugvallen zou juist die limiet opmaken. In beide gevallen telt een probleem met de relay nooit als bounce, en een bericht dat de relay mogelijk al heeft aangenomen (een fout tijdens DATA) gaat niet nog eens via de gewone route."
+
+msgid "SMTP Relay settings"
+msgstr "Instellingen SMTP Relay"
+
+msgid "The relay host, port or username changed: enter the password again."
+msgstr "De relayserver, poort of gebruikersnaam is gewijzigd: vul het wachtwoord opnieuw in."
+
+msgid "Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None."
+msgstr "Inloggegevens gaan alleen via TLS: kies STARTTLS of direct TLS, of zet Inloggen op Geen."
+
+msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
+msgstr "Voor het kiezen van OAuth, of het wijzigen van de relayserver, poort of versleuteling daarbij, is de permissie \"manage OAuth client secrets\" nodig."
+
+msgid "With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS)."
+msgstr "Bij OAuth moet de relayserver bij de provider van het token horen (Google: smtp-relay.gmail.com of smtp.gmail.com, poort 587 met STARTTLS of 465 met direct TLS)."
 
 msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
 msgstr "Handdruk met de relay: verbinden, inloggen, MAIL FROM en RCPT TO, daarna RSET. Er wordt geen bericht verstuurd (DATA wordt nooit gegeven)."
@@ -115,6 +142,9 @@ msgstr "Afzender"
 
 msgid "Recipient"
 msgstr "Ontvanger"
+
+msgid "Run test"
+msgstr "Test uitvoeren"
 
 msgid "Step"
 msgstr "Stap"
@@ -136,10 +166,3 @@ msgstr "De relay weigert; controleer de instellingen en de inrichting van de rel
 
 msgid "Back to SMTP Relay settings"
 msgstr "Terug naar de instellingen van SMTP Relay"
-
-msgid "SMTP Relay settings"
-msgstr "Instellingen SMTP Relay"
-
-msgid "SMTP Relay: test connection"
-msgstr "SMTP Relay: verbinding testen"
-

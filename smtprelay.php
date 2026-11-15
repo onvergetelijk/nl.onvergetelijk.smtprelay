@@ -64,9 +64,91 @@ function smtprelay_civicrm_enable(): void {
  * translatable title at display time instead.
  */
 function smtprelay_civicrm_buildForm($formName, &$form): void {
-  if ($formName === 'CRM_Admin_Form_Generic' && CRM_Utils_System::currentPath() === 'civicrm/admin/setting/smtprelay') {
-    $form->setTitle(E::ts('SMTP Relay settings'));
+  if (!_smtprelay_is_settings_form($formName)) {
+    return;
   }
+  $form->setTitle(E::ts('SMTP Relay settings'));
+
+  // The stored password never goes back to the browser (not even encrypted). An empty field on save
+  // means "keep the stored password". The form saves the empty value regardless (QuickForm falls back
+  // to the element's default), so remember the stored value here and put it back in postProcess.
+  // It is never put into the form itself, so a re-displayed form cannot show it.
+  if ($form->elementExists('smtprelay_password')) {
+    $form->setDefaults(['smtprelay_password' => '']);
+    unset(\Civi::$statics['smtprelay']['password_kept']);
+    $stored = (string) \Civi::settings()->get('smtprelay_password');
+    if ($form->isSubmitted() && $stored !== '' && (string) ($form->_submitValues['smtprelay_password'] ?? '') === '') {
+      \Civi::$statics['smtprelay']['password_kept'] = $stored;
+    }
+  }
+}
+
+/**
+ * Implements hook_civicrm_postProcess(): restore the stored password after a save with an empty field
+ * (see smtprelay_civicrm_buildForm).
+ */
+function smtprelay_civicrm_postProcess($formName, $form): void {
+  if (_smtprelay_is_settings_form($formName) && isset(\Civi::$statics['smtprelay']['password_kept'])) {
+    \Civi::settings()->set('smtprelay_password', \Civi::$statics['smtprelay']['password_kept']);
+    unset(\Civi::$statics['smtprelay']['password_kept']);
+  }
+}
+
+/**
+ * Implements hook_civicrm_validateForm().
+ *
+ * Checks on the settings form, so a policy violation is reported when saving instead of when the
+ * first mailing tries the relay. The same rules are enforced again at send time (CRM_Smtprelay_Policy).
+ * - Choosing OAuth, or changing where an OAuth token goes, requires "manage OAuth client secrets":
+ *   whoever controls this setting decides which server receives a mailbox token.
+ */
+function smtprelay_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors): void {
+  if (!_smtprelay_is_settings_form($formName)) {
+    return;
+  }
+  $s        = \Civi::settings();
+  $auth     = (string) ($fields['smtprelay_auth'] ?? $s->get('smtprelay_auth'));
+  $security = (string) ($fields['smtprelay_security'] ?? $s->get('smtprelay_security'));
+  $host     = strtolower(trim((string) ($fields['smtprelay_host'] ?? $s->get('smtprelay_host'))));
+  $port     = (int) ($fields['smtprelay_port'] ?? $s->get('smtprelay_port'));
+
+  if (!in_array($port, CRM_Smtprelay_Policy::PORTS, TRUE)) {
+    $errors['smtprelay_port'] = E::ts('Allowed: 25, 465, 587 or 2525.');
+  }
+  // A kept password goes wherever host, port and username point. Changing those with the password
+  // left empty would deliver the stored password to the new server (which an administrator could
+  // run): ask for it again.
+  if ($auth === 'password' && isset(\Civi::$statics['smtprelay']['password_kept'])
+      && (strtolower(trim((string) $s->get('smtprelay_host'))) !== $host
+        || (int) $s->get('smtprelay_port') !== $port
+        || trim((string) $s->get('smtprelay_username')) !== trim((string) ($fields['smtprelay_username'] ?? $s->get('smtprelay_username'))))) {
+    $errors['smtprelay_password'] = E::ts('The relay host, port or username changed: enter the password again.');
+  }
+  if ($auth !== 'none' && $security === 'none') {
+    $errors['smtprelay_security'] = E::ts('Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None.');
+  }
+  if ($auth === 'oauth') {
+    $changed = $s->get('smtprelay_auth') !== 'oauth'
+      || strtolower(trim((string) $s->get('smtprelay_host'))) !== $host
+      || (int) $s->get('smtprelay_port') !== $port
+      || (string) $s->get('smtprelay_security') !== $security;
+    if ($changed && !CRM_Core_Permission::check('manage OAuth client secrets')) {
+      $errors['smtprelay_auth'] = E::ts('Choosing OAuth or changing its relay host, port or encryption requires the permission "manage OAuth client secrets".');
+    }
+    $known = FALSE;
+    foreach (CRM_Smtprelay_Policy::OAUTH_PROFILES as $provider => $hosts) {
+      if (CRM_Smtprelay_Policy::checkOauthTarget($provider, ['host' => $host, 'port' => $port, 'security' => $security]) === TRUE) {
+        $known = TRUE;
+      }
+    }
+    if (!$known && $host !== '') {
+      $errors['smtprelay_host'] = E::ts('With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS).');
+    }
+  }
+}
+
+function _smtprelay_is_settings_form($formName): bool {
+  return $formName === 'CRM_Admin_Form_Generic' && CRM_Utils_System::currentPath() === 'civicrm/admin/setting/smtprelay';
 }
 
 /**

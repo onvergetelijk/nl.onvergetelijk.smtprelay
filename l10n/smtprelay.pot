@@ -6,6 +6,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "SMTP Relay: test connection"
+msgstr ""
+
+msgid "The form has expired. Open the page again and retry."
+msgstr ""
+
+msgid "The recipient is not a valid e-mail address."
+msgstr ""
+
 msgid "Off - nothing is routed, the relay is not even hooked in"
 msgstr ""
 
@@ -36,10 +45,13 @@ msgstr ""
 msgid "Relay host"
 msgstr ""
 
-msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. Empty = relay not configured: matching mailings are refused (or fall back, see On failure)."
+msgid "For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. The host must resolve to public addresses only. Empty = relay not configured: matching mailings wait (or fall back, see On failure)."
 msgstr ""
 
 msgid "Relay port"
+msgstr ""
+
+msgid "Allowed: 25, 465, 587 or 2525."
 msgstr ""
 
 msgid "STARTTLS (usually port 587)"
@@ -48,7 +60,7 @@ msgstr ""
 msgid "Implicit TLS (usually port 465)"
 msgstr ""
 
-msgid "None (local testing only)"
+msgid "None (local testing only, never with authentication)"
 msgstr ""
 
 msgid "Encryption"
@@ -72,7 +84,7 @@ msgstr ""
 msgid "Authentication"
 msgstr ""
 
-msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. Tested with the Google Workspace SMTP relay (smtp-relay.gmail.com accepts XOAUTH2 with the username set to the mailbox address)."
+msgid "OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. The token only goes to the relay of its own provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS); other hosts are refused. Choosing or changing OAuth requires the permission \"manage OAuth client secrets\". Credentials are only ever sent over TLS."
 msgstr ""
 
 msgid "Username"
@@ -84,7 +96,7 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-msgid "Only for Authentication = Username and password. Values encrypted with CiviCRM crypto.token are decrypted on use; plain values work too but are stored as entered."
+msgid "Only for Authentication = Username and password. Stored encrypted with CiviCRM crypto (key tag CRED; without CIVICRM_CRED_KEYS the value stays readable in the database) and never shown again. Leave empty to keep the stored password; after changing host, port or username enter it again."
 msgstr ""
 
 msgid "Envelope sender (bounces)"
@@ -93,7 +105,7 @@ msgstr ""
 msgid "Rewrites the envelope sender (Return-Path) of relayed mail. Empty = keep the CiviMail VERP address. Set it to a monitored mailbox (for example the one your bounce processing reads) if the VERP addresses of your domain have no mailbox. The X-CiviMail-Bounce header stays, so CiviCRM still recognises the bounce."
 msgstr ""
 
-msgid "Refuse - return the error; CiviMail retries in a later run"
+msgid "Refuse - pause the mailing; CiviMail resumes it in a later run"
 msgstr ""
 
 msgid "Fall back - send that message via the normal route"
@@ -102,7 +114,22 @@ msgstr ""
 msgid "On failure of the relay"
 msgstr ""
 
-msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota."
+msgid "Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota. Either way a relay problem never counts as a bounce, and a message the relay may already have accepted (an error during DATA) is not sent again via the normal route."
+msgstr ""
+
+msgid "SMTP Relay settings"
+msgstr ""
+
+msgid "The relay host, port or username changed: enter the password again."
+msgstr ""
+
+msgid "Credentials are only sent over TLS: choose STARTTLS or implicit TLS, or set Authentication to None."
+msgstr ""
+
+msgid "Choosing OAuth or changing its relay host, port or encryption requires the permission \"manage OAuth client secrets\"."
+msgstr ""
+
+msgid "With OAuth the relay host must belong to the token provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS)."
 msgstr ""
 
 msgid "Handshake with the relay: connect, authenticate, MAIL FROM and RCPT TO, then RSET. No message is sent (DATA is never issued)."
@@ -112,6 +139,9 @@ msgid "Sender"
 msgstr ""
 
 msgid "Recipient"
+msgstr ""
+
+msgid "Run test"
 msgstr ""
 
 msgid "Step"
@@ -134,10 +164,3 @@ msgstr ""
 
 msgid "Back to SMTP Relay settings"
 msgstr ""
-
-msgid "SMTP Relay settings"
-msgstr ""
-
-msgid "SMTP Relay: test connection"
-msgstr ""
-

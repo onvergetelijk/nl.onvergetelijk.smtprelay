@@ -1,5 +1,8 @@
 <?php
 
+// The PEAR_MAIL_SMTP_ERROR_* constants, also when no relay transport has been built yet.
+require_once 'Mail/smtp.php';
+
 /**
  * Outermost mailer: per message either the relay or the mailer CiviCRM built (which may already be
  * wrapped by other extensions, such as oauth_outgoing_mail).
@@ -9,11 +12,19 @@
  */
 class CRM_Smtprelay_Router extends Mail {
 
+  /**
+   * Marker that FlexMailer's DefaultSender::isTemporaryError() recognises as a temporary error: it
+   * then retries the batch and, after 5 in a row, stops the job until the next cron run. Without it a
+   * relay problem (connection, login, policy, quota, configuration) would be recorded as a bounce for
+   * every recipient, and enough bounces put those contacts on hold.
+   */
+  public const TEMPORARY = 'Failed to write to socket';
+
   /** @var Mail */
   protected $default;
 
-  /** @var Mail|null Relay transport, built on the first relayed message of this process. */
-  protected $relay = NULL;
+  /** @var Mail[] Relay transports per sender address, built on the first relayed message of this process. */
+  protected $relays = [];
 
   public function __construct($default) {
     $this->default = $default;
@@ -68,33 +79,125 @@ class CRM_Smtprelay_Router extends Mail {
       return $result;
     }
 
-    \Civi::log('smtprelay')->error('Relay failed: ' . $result->getMessage());
-    if ((string) \Civi::settings()->get('smtprelay_on_failure') === 'fallback') {
-      // The message as CiviCRM built it, without the relay envelope.
+    $class = self::classify($result);
+    \Civi::log('smtprelay')->error(sprintf('Relay failed (%s): %s', $class, CRM_Smtprelay_Policy::redact($result->getMessage())));
+
+    // A broken connection may be half open; start clean on the next message.
+    if ($class !== 'recipient') {
+      $this->dropRelay((string) ($headers['From'] ?? ''));
+    }
+
+    // A refused address is a bounce on any route; never spend the normal route's quota on it.
+    if ($class === 'recipient') {
+      return $result;
+    }
+
+    // Fall back only when the relay certainly did not take the message (before DATA), otherwise the
+    // recipient could get it twice.
+    if ($result->getCode() !== PEAR_MAIL_SMTP_ERROR_DATA
+        && (string) \Civi::settings()->get('smtprelay_on_failure') === 'fallback') {
       return $this->default->send($recipients, $original, $body);
     }
-    return $result;
+
+    // A configuration or policy error will not go away by retrying. Pause the mailing (as the Pause
+    // button in CiviMail does), so later cron runs skip it instead of stopping on it every time;
+    // resume it in CiviMail after fixing the settings.
+    if ($result->getCode() === CRM_Smtprelay_Policy::CONFIG && $decision['mailing_id']) {
+      $this->pauseMailing((int) $decision['mailing_id']);
+    }
+    return PEAR::raiseError('smtprelay: ' . self::TEMPORARY . ' (relay unavailable or refused the job; the mailing resumes in a later run): '
+      . CRM_Smtprelay_Policy::redact($result->getMessage()), $result->getCode());
   }
 
   /**
-   * Builds the relay transport once per process (persist: one SMTP connection for the whole run).
-   * Built with Mail::factory directly, NOT CRM_Utils_Mail::_createMailer(): that would call
-   * hook_civicrm_alterMailer again, and other extensions would wrap the relay too.
+   * Pauses a mailing once per process, with an error in the log (channel smtprelay).
+   */
+  protected function pauseMailing(int $mailingId): void {
+    static $paused = [];
+    if (isset($paused[$mailingId])) {
+      return;
+    }
+    $paused[$mailingId] = TRUE;
+    try {
+      CRM_Mailing_BAO_MailingJob::pause($mailingId);
+      \Civi::log('smtprelay')->error("Mailing $mailingId paused: the relay is not usable with the current settings. Fix the SMTP Relay settings (or set the mode to Off) and resume the mailing in CiviMail.");
+    }
+    catch (\Throwable $e) {
+      \Civi::log('smtprelay')->error("Mailing $mailingId could not be paused: " . $e->getMessage());
+    }
+  }
+
+  /**
+   * Is this relay error about this one recipient or message ('recipient': a bounce is right), or about
+   * the relay, its configuration or its policy ('job': pause the job, never bounce)?
+   *
+   * Only a permanent (5xx) refusal of the recipient or the message with an enhanced status code about
+   * the address or the content (5.1.x, 5.2.x, 5.3.4, 5.6.x) is a bounce. Policy, relaying, quota and
+   * authentication refusals (5.7.x, 5.4.5, 4xx) and every connection or configuration error are 'job'.
+   */
+  public static function classify(PEAR_Error $error): string {
+    if (!in_array($error->getCode(), [PEAR_MAIL_SMTP_ERROR_RECIPIENT, PEAR_MAIL_SMTP_ERROR_DATA], TRUE)) {
+      return 'job';
+    }
+    if (!preg_match('/ \(code: (\d\d\d), response: ([^)]*)/', $error->getMessage(), $m) || $m[1][0] !== '5') {
+      return 'job';
+    }
+    // With an enhanced status code: only address and content refusals bounce.
+    if (preg_match('/^(\d)\.(\d{1,3})\.(\d{1,3})\b/', trim($m[2]), $e)) {
+      return preg_match('/^5\.(1\.\d+|2\.\d+|3\.4|6\.\d+)$/', "$e[1].$e[2].$e[3]") ? 'recipient' : 'job';
+    }
+    // Without one (servers without ENHANCEDSTATUSCODES) a 5xx on RCPT or DATA is about this message;
+    // retrying it would keep the job from ever finishing.
+    return 'recipient';
+  }
+
+  /**
+   * Closes the relay connections and the default route (FlexMailer calls this between retries).
+   */
+  public function disconnect() {
+    foreach ($this->relays as $relay) {
+      self::closeTransport($relay);
+    }
+    $this->relays = [];
+    if (is_callable([$this->default, 'disconnect'])) {
+      return $this->default->disconnect();
+    }
+    return TRUE;
+  }
+
+  protected function dropRelay(string $from): void {
+    $key = CRM_Smtprelay_Policy::address($from);
+    if (isset($this->relays[$key])) {
+      self::closeTransport($this->relays[$key]);
+      unset($this->relays[$key]);
+    }
+  }
+
+  protected static function closeTransport($mailer): void {
+    $smtp = is_a($mailer, 'CRM_Utils_Mail_FilteredPearMailer') ? $mailer->getDelegate() : $mailer;
+    if (is_object($smtp) && method_exists($smtp, 'disconnect')) {
+      $smtp->disconnect();
+    }
+  }
+
+  /**
+   * Builds the relay transport once per sender address per process (persist: one SMTP connection for
+   * the whole run; a second sender with other credentials gets its own connection and login).
+   * Built directly, NOT with CRM_Utils_Mail::_createMailer(): that would call hook_civicrm_alterMailer
+   * again, and other extensions would wrap the relay too.
    *
    * @return Mail|PEAR_Error
    */
   protected function relayMailer(string $from) {
-    if ($this->relay) {
-      return $this->relay;
+    $key = CRM_Smtprelay_Policy::address($from);
+    if (isset($this->relays[$key])) {
+      return $this->relays[$key];
     }
-    $params = self::transportParams($from);
+    $params = static::transportParams($from);
     if (is_a($params, 'PEAR_Error')) {
       return $params;
     }
-    $mailer = Mail::factory('smtp', $params);
-    if (is_a($mailer, 'PEAR_Error')) {
-      return $mailer;
-    }
+    $mailer = new CRM_Smtprelay_Transport($params);
     // Same filters as core's CRM_Utils_Mail::_createMailer(), without the hook.
     $mailer = new CRM_Utils_Mail_FilteredPearMailer('smtp', $params, $mailer);
     $mailer->addFilter('2000_log', ['CRM_Utils_Mail_Logger', 'filter']);
@@ -103,36 +206,46 @@ class CRM_Smtprelay_Router extends Mail {
         return PEAR::raiseError('$headers must be an array');
       }
     });
-    $this->relay = $mailer;
-    return $this->relay;
+    $this->relays[$key] = $mailer;
+    return $mailer;
   }
 
   /**
-   * PEAR Mail_smtp parameters from the settings, including credentials.
+   * Allow a relay host on a private or loopback address. Only for tests against a local SMTP sink.
+   */
+  protected static function allowLocalHosts(): bool {
+    return FALSE;
+  }
+
+  /**
+   * Transport parameters from the validated settings, including credentials.
    *
    * @return array|PEAR_Error
    */
   public static function transportParams(string $from) {
-    $s    = \Civi::settings();
-    $host = trim((string) $s->get('smtprelay_host'));
-    if ($host === '') {
-      return PEAR::raiseError('smtprelay: no relay host configured');
+    $target = CRM_Smtprelay_Policy::target(static::allowLocalHosts());
+    if (is_a($target, 'PEAR_Error')) {
+      return $target;
     }
-    $security = (string) ($s->get('smtprelay_security') ?: 'starttls');
-    $helo     = trim((string) $s->get('smtprelay_helo'));
-    if ($helo === '' && preg_match('/@([\w.-]+)/', $from, $m)) {
-      $helo = $m[1];
+    $helo = CRM_Smtprelay_Policy::helo($from);
+    if (is_a($helo, 'PEAR_Error')) {
+      return $helo;
     }
+    // Pinned to the checked IPv4 address (CRM_Smtprelay_Policy::target); certificate checked against
+    // the host name.
+    $connectTo = $target['ip'] ?? $target['host'];
     $params = [
-      'host'      => ($security === 'ssl' ? 'ssl://' : '') . $host,
-      'port'      => (int) ($s->get('smtprelay_port') ?: 587),
-      'auth'      => FALSE,
-      'localhost' => $helo ?: 'localhost',
-      'starttls'  => $security === 'starttls',
-      'persist'   => TRUE,
-      'timeout'   => 30,
+      'host'               => ($target['security'] === 'ssl' ? 'ssl://' : '') . $connectTo,
+      'socket_options'     => ['ssl' => ['peer_name' => $target['host'], 'SNI_server_name' => $target['host'], 'verify_peer' => TRUE, 'verify_peer_name' => TRUE]],
+      'port'               => $target['port'],
+      'auth'               => FALSE,
+      'localhost'          => $helo,
+      'starttls'           => $target['security'] === 'starttls',
+      'smtprelay_security' => $target['security'],
+      'persist'            => TRUE,
+      'timeout'            => 30,
     ];
-    $credentials = CRM_Smtprelay_Credentials::forSender($from);
+    $credentials = CRM_Smtprelay_Credentials::forSender($from, $target);
     if (is_a($credentials, 'PEAR_Error')) {
       return $credentials;
     }

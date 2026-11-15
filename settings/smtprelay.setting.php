@@ -56,7 +56,7 @@ return [
     'default'     => '',
     'html_type'   => 'text',
     'title'       => $t('Relay host'),
-    'description' => $t('For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. Empty = relay not configured: matching mailings are refused (or fall back, see On failure).'),
+    'description' => $t('For example smtp-relay.gmail.com (Google Workspace SMTP relay service) or the SMTP host of a bulk provider. The host must resolve to public addresses only. Empty = relay not configured: matching mailings wait (or fall back, see On failure).'),
     'settings_pages' => ['smtprelay' => ['weight' => 40]],
   ],
   'smtprelay_port' => $base + [
@@ -65,6 +65,7 @@ return [
     'default'     => 587,
     'html_type'   => 'text',
     'title'       => $t('Relay port'),
+    'description' => $t('Allowed: 25, 465, 587 or 2525.'),
     'settings_pages' => ['smtprelay' => ['weight' => 50]],
   ],
   'smtprelay_security' => $base + [
@@ -75,7 +76,7 @@ return [
     'options'     => [
       'starttls' => $t('STARTTLS (usually port 587)'),
       'ssl'      => $t('Implicit TLS (usually port 465)'),
-      'none'     => $t('None (local testing only)'),
+      'none'     => $t('None (local testing only, never with authentication)'),
     ],
     'title'       => $t('Encryption'),
     'settings_pages' => ['smtprelay' => ['weight' => 60]],
@@ -100,7 +101,7 @@ return [
       'oauth'    => $t('OAuth token of oauth_outgoing_mail (XOAUTH2)'),
     ],
     'title'       => $t('Authentication'),
-    'description' => $t('OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. Tested with the Google Workspace SMTP relay (smtp-relay.gmail.com accepts XOAUTH2 with the username set to the mailbox address).'),
+    'description' => $t('OAuth reuses the system token that the OAuth Outgoing Mail extension keeps for the sender address; no password is stored. The token only goes to the relay of its own provider (Google: smtp-relay.gmail.com or smtp.gmail.com, port 587 with STARTTLS or 465 with implicit TLS); other hosts are refused. Choosing or changing OAuth requires the permission "manage OAuth client secrets". Credentials are only ever sent over TLS.'),
     'settings_pages' => ['smtprelay' => ['weight' => 80]],
   ],
   'smtprelay_username' => $base + [
@@ -117,8 +118,11 @@ return [
     'type'        => 'String',
     'default'     => '',
     'html_type'   => 'password',
+    // Encrypt a plain value right after it is saved (form or API). on_change cannot do this: it runs
+    // before the save, so the plain value would overwrite the encrypted one.
+    'post_change' => ['CRM_Smtprelay_Secrets::encryptPassword'],
     'title'       => $t('Password'),
-    'description' => $t('Only for Authentication = Username and password. Values encrypted with CiviCRM crypto.token are decrypted on use; plain values work too but are stored as entered.'),
+    'description' => $t('Only for Authentication = Username and password. Stored encrypted with CiviCRM crypto (key tag CRED; without CIVICRM_CRED_KEYS the value stays readable in the database) and never shown again. Leave empty to keep the stored password; after changing host, port or username enter it again.'),
     'settings_pages' => ['smtprelay' => ['weight' => 100]],
   ],
   'smtprelay_envelope_from' => $base + [
@@ -136,11 +140,11 @@ return [
     'default'     => 'refuse',
     'html_type'   => 'select',
     'options'     => [
-      'refuse'   => $t('Refuse - return the error; CiviMail retries in a later run'),
+      'refuse'   => $t('Refuse - pause the mailing; CiviMail resumes it in a later run'),
       'fallback' => $t('Fall back - send that message via the normal route'),
     ],
     'title'       => $t('On failure of the relay'),
-    'description' => $t('Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota.'),
+    'description' => $t('Refuse is safest when the reason for the relay is a daily quota on the normal route: falling back would use up exactly that quota. Either way a relay problem never counts as a bounce, and a message the relay may already have accepted (an error during DATA) is not sent again via the normal route.'),
     'settings_pages' => ['smtprelay' => ['weight' => 120]],
   ],
 ];
