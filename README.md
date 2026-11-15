@@ -84,7 +84,20 @@ PHP-FPM worker: after updating a translation, restart PHP-FPM (a cache flush is 
 
 ## Development
 
-Tests (end-to-end against a development site; nothing is sent, the mailers are fakes):
+Tests (end-to-end against a development site; nothing is delivered):
+
+| Test | Covers |
+|---|---|
+| `DecisionTest` | the routing decision: CiviMail bulk only, size rule, listed mailings, test mails, reminders, shadow, off |
+| `RouterTest` | the router as a mailer with fake transports: hook in/out, envelope, refuse vs fall back, no host |
+| `HookOrderTest` | the router stays the outermost mailer when another extension wraps the mailer (as OAuth Outgoing Mail does) |
+| `WireTest` | what reaches a relay, measured with a local SMTP sink (`tests/phpunit/fixtures/smtp-sink.php`): EHLO, MAIL FROM, no AUTH, VERP header |
+| `CredentialsTest` | transport parameters, password (plain and crypto.token), OAuth without token |
+| `SettingsEdgeTest` | unknown mode = off, mailing ID list parsing, connection test without host |
+| `MenuTest` | one translatable Administer > System Settings link |
+| `TranslationTest` | every string in the code is in the .pot and translated in each .po and .mo |
+
+Not automated: the OAuth happy path against a real relay (use the connection test page).
 
 ```bash
 phpunit9 --configuration=phpunit.xml.dist
