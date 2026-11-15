@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<extension key="nl.onvergetelijk.smtprelay" type="module">
+  <file>smtprelay</file>
+  <name>SMTP Relay</name>
+  <description>Send large CiviMail mailings through a second SMTP route (an SMTP relay or bulk provider) while all other mail keeps using the default outbound route. Rules, shadow mode, and authentication without credentials (IP), with a password, or by reusing the OAuth token of oauth_outgoing_mail.</description>
+  <license>AGPL-3.0</license>
+  <authors>
+    <author>
+      <name>Richard van Oosterhout</name>
+      <email>webteam@onvergetelijk.nl</email>
+      <role>Maintainer</role>
+    </author>
+  </authors>
+  <urls>
+    <url desc="Main Extension Page">https://github.com/onvergetelijk/nl.onvergetelijk.smtprelay</url>
+    <url desc="Documentation">https://github.com/onvergetelijk/nl.onvergetelijk.smtprelay/blob/main/README.md</url>
+    <url desc="Support">https://github.com/onvergetelijk/nl.onvergetelijk.smtprelay/issues</url>
+    <url desc="Licensing">https://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2026-11-15</releaseDate>
+  <version>1.0.0</version>
+  <develStage>beta</develStage>
+  <compatibility mode="semver">
+    <comments>Semantic versioning. For example, compatibility with "6.1" implies compatibility with "6.2".</comments>
+    <ver>6.0</ver>
+  </compatibility>
+  <php_compatibility mode="list">
+    <comments>Listed versions. For example, specify both "8.1" and "8.2".</comments>
+    <ver>8.0</ver>
+    <ver>8.1</ver>
+    <ver>8.2</ver>
+    <ver>8.3</ver>
+    <ver>8.4</ver>
+  </php_compatibility>
+  <smarty_compatibility mode="list">
+    <comments>Listed versions. For example, specify both "4" and "5".</comments>
+    <ver>5</ver>
+  </smarty_compatibility>
+  <comments>Developed for Stichting Onvergetelijke Zomerkampen (NL). Default mode is off: installing changes nothing until you configure a rule and switch to shadow or on.</comments>
+  <classloader>
+    <psr0 prefix="CRM_" path="."/>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
+  <civix>
+    <namespace>CRM/Smtprelay</namespace>
+    <format>25.10.2</format>
+    <angularModule>crmSmtprelay</angularModule>
+  </civix>
+  <mixins>
+    <mixin>mgd-php@2.0.0</mixin>
+    <mixin>scan-classes@1.0.0</mixin>
+    <mixin>setting-php@1.0.0</mixin>
+    <mixin>setting-admin@1.1.0</mixin>
+    <mixin>menu-xml@1.0.0</mixin>
+    <mixin>smarty@1.0.3</mixin>
+  </mixins>
+</extension>

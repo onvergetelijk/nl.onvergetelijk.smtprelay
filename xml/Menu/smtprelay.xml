@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/admin/setting/smtprelay/test</path>
+    <page_callback>CRM_Smtprelay_Page_Test</page_callback>
+    <title>SMTP Relay: test connection</title>
+    <access_arguments>administer smtprelay</access_arguments>
+  </item>
+</menu>
