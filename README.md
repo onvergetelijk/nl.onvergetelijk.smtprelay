@@ -79,7 +79,8 @@ the username set to the display name instead of the mailbox address, Google answ
 
 Dutch (`nl_NL`) is included in `l10n/nl_NL/LC_MESSAGES/smtprelay.mo`; `l10n/smtprelay.pot` is the template for
 other languages. With `CIVICRM_GETTEXT_NATIVE` the operating system needs the locale (for Dutch:
-`nl_NL.UTF-8` in `/etc/locale.gen`, then `locale-gen`), otherwise every CiviCRM string stays English.
+`nl_NL.UTF-8` in `/etc/locale.gen`, then `locale-gen`), otherwise every CiviCRM string stays English. Native gettext also keeps a loaded `.mo` in memory per
+PHP-FPM worker: after updating a translation, restart PHP-FPM (a cache flush is not enough).
 
 ## Development
 
