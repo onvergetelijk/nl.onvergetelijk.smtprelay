@@ -3,7 +3,17 @@
 ini_set('memory_limit', '2G');
 
 // phpcs:disable
-eval(cv('php:boot --level=classloader', 'phpcode'));
+// Inside the OZK extensions tree, use the shared test bootstrap: it locates
+// civicrm.settings.php regardless of the working directory (the nightly run
+// starts phpunit from $HOME, where cv finds no settings file) and registers
+// the shared test listener. Elsewhere, fall back to the standard civix boot.
+if (is_file(__DIR__ . '/../../../OzkTestBootstrap.php')) {
+  require_once __DIR__ . '/../../../OzkTestBootstrap.php';
+  ozktest_bootstrap_civicrm();
+}
+else {
+  eval(cv('php:boot --level=classloader', 'phpcode'));
+}
 // phpcs:enable
 // Allow autoloading of PHPUnit helper classes in this extension.
 $loader = new \Composer\Autoload\ClassLoader();
